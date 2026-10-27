@@ -27,6 +27,33 @@ It prints a pairing link and a QR code. Open the link to use the app.
 
 With the daemon running, other terminals can ask it: `claude-ui status`, `claude-ui sessions` (`--json` for scripts), `claude-ui projects`, `claude-ui workers`, and `claude-ui open` to open the app in your browser (`--print` prints the pairing link). After `claude-ui update`, run `npm i -g claude-code-ui` to get the new launcher with these commands. To use it from your phone, start it with `claude-ui --tailscale`.
 
+## Custom Anthropic-compatible endpoint (API mode)
+
+By default claude-ui uses your Claude subscription (`claude login`). For a
+self-hosted Anthropic Messages API gateway, set an explicit API mode; the
+daemon then passes the gateway settings to the Agent SDK instead of removing
+API keys:
+
+```sh
+export CLAUDE_UI_PROVIDER_MODE=api
+export ANTHROPIC_BASE_URL=https://gateway.example
+export ANTHROPIC_AUTH_TOKEN=...
+export ANTHROPIC_MODEL=vendor/model
+export CLAUDE_UI_MODELS=vendor/model,vendor/model-fast   # optional
+export CLAUDE_UI_CONTEXT_WINDOW=1000000                  # optional
+export CLAUDE_UI_MAX_OUTPUT_TOKENS=64000                 # optional
+claude-ui --lan
+```
+
+Only Anthropic Messages API-compatible gateways work; an OpenAI-only endpoint
+needs a translation proxy. Subscription mode is unchanged and continues to
+strip inherited API keys. The key is read from the environment, never written
+to `~/.config/claude-ui`, the browser, or logs.
+
+The published CLI pins `node-pty` 1.2 beta, whose Linux x64 prebuild lets a
+container without `make`/`g++` install the terminal panel. A source checkout
+still needs the build tools for its development dependency.
+
 ## What you get
 
 - Sessions in tabs, grouped by project. They keep running when the browser closes.

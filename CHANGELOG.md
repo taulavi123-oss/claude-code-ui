@@ -2,6 +2,22 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- Opt-in API provider mode (`CLAUDE_UI_PROVIDER_MODE=api`) for Anthropic
+  Messages API-compatible gateways, with `ANTHROPIC_BASE_URL`,
+  `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL`, model/context/output overrides.
+  Subscription mode remains the default and continues to strip inherited API
+  keys.
+- `--host <address>` binds an explicit interface in addition to `--lan`.
+
+### Changed
+
+- The published CLI pins `node-pty` 1.2 beta, whose Linux x64 prebuild installs
+  without `make`/`g++`.
+
 ## 0.8.0 - 2026-10-25
 
 ### Added

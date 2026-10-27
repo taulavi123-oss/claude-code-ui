@@ -112,7 +112,12 @@ describe("parseCli", () => {
       for (const a of [["--future-flag"], ["--port", "5000", "--future-flag"], ["--port", "x"]]) expect(isDaemonRun(a), a.join(" ")).toBe(true);
     });
     it("a command rejects daemon-only flags", () => {
-      for (const f of [["--lan"], ["--roots", "/x"], ["--hostname", "h"], ["--tailscale"], ["--allow-bypass"], ["--no-update-check"], ["--no-os-notify"]]) expect(parseCli(["status", ...f], {}, "/h"), f[0]).toMatchObject({ kind: "error", message: expect.stringContaining("starts the daemon") });
+      for (const f of [["--lan"], ["--host", "0.0.0.0"], ["--roots", "/x"], ["--hostname", "h"], ["--tailscale"], ["--allow-bypass"], ["--no-update-check"], ["--no-os-notify"]]) expect(parseCli(["status", ...f], {}, "/h"), f[0]).toMatchObject({ kind: "error", message: expect.stringContaining("starts the daemon") });
+    });
+    it("--host binds an explicit address; a wildcard also enables LAN mode", () => {
+      expect(parseCli(["--host", "0.0.0.0"], {}, "/h")).toMatchObject({ kind: "run", host: "0.0.0.0", lan: true });
+      expect(parseCli(["--host", "127.0.0.1"], {}, "/h")).toMatchObject({ kind: "run", host: "127.0.0.1", lan: false });
+      expect(parseCli([], { CLAUDE_UI_HOST: "0.0.0.0" }, "/h")).toMatchObject({ host: "0.0.0.0", lan: true });
     });
     it("USAGE_HINT is short and points to --help", () => {
       expect(USAGE_HINT.split("\n").length).toBeLessThanOrEqual(2);
