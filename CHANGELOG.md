@@ -2,6 +2,13 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.10.0 - 2026-10-28
+
+- Settings › Permissions: the default permission policy for new sessions.
+  Ask (default), Auto accept (bypassPermissions) or Deny (dontAsk). Auto accept
+  needs the daemon flag `--allow-bypass`; without it the session starts in
+  acceptEdits. Existing sessions keep their own mode.
+
 ## 0.9.3 - 2026-10-28
 
 - API mode keeps the provider key the launcher exported (vip.env) when no key
