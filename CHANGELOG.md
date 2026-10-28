@@ -2,6 +2,15 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.9.3 - 2026-10-28
+
+- API mode keeps the provider key the launcher exported (vip.env) when no key
+  is saved in the UI. Selecting API mode used to delete it, which made the CLI
+  answer "Not logged in - Please run /login".
+- Test connection falls back to the environment for an empty base URL, model
+  or key, so it works with the key kept in vip.env.
+- Settings defaults test covers the provider section.
+
 ## 0.9.2 - 2026-10-28
 
 - Settings now shows the Provider group. The section existed but was never
