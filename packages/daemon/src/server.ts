@@ -23,7 +23,7 @@ import { createSecrets, type Secrets } from "./secrets.ts";
 import { createWorktree, listBranches, pullRequestBranches, gitBlobRead, gitBlobRef, gitDiff, gitDirsOf, gitEscapes, gitFileAt, gitLog, gitRefs, gitShow, gitStatus, gitTopOf, isHash, classify, listRepos, listWorktrees, removeWorktree, WorktreeError, worktreeStatus, type CreateWorktreeOptions } from "./git.ts";
 import { gitBranch, gitFetch, gitPull, gitPush } from "./git-remote.ts";
 import { createNotifier, type Push } from "./push.ts";
-import { readDefaultMode } from "./default-mode.ts";
+import { modeForPolicy, readDefaultMode } from "./default-mode.ts";
 import { createSettings, type AppSettings } from "./settings.ts";
 import { createProjects, trim, type Projects } from "./projects.ts";
 import { createPlanTracker, RESET_GRACE_MS, usesOauthToken } from "./plan-usage.ts";
@@ -1012,8 +1012,10 @@ export function createDaemon(opts: {
 
   /** `permissions.defaultMode` of the Claude settings for `cwd`, when this daemon offers it for `model` (bypass needs the daemon flag, auto a model with support). */
   const defaultModeFor = (cwd: string, model = "default") => {
-    const mode = readDefaultMode(claudeDir, cwd);
-    return permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto(model) }).find((m) => m === mode);
+    const modes = permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto(model) });
+    const chosen = modeForPolicy(appSettings.get().permissions?.policy, modes);
+    if (chosen) return chosen;
+    return modes.find((m) => m === readDefaultMode(claudeDir, cwd));
   };
 
   /** A session of this daemon run, or one rebuilt from its SDK transcript (ADR 0001). Concurrent calls share one restore. */

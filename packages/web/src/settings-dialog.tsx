@@ -28,6 +28,7 @@ import { KeyTipsRow } from "./key-tip.tsx";
 import { ChevronLeftIcon } from "lucide-react";
 import { ListSetting } from "./list-setting.tsx";
 import { JiraSection } from "./jira-settings.tsx";
+import { PermissionsSection } from "./permissions-settings.tsx";
 import { ProviderSection } from "./provider-settings.tsx";
 
 const GROUP_KEY = "claude-ui.settingsGroup";
@@ -608,6 +609,10 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
     // Opt-in API provider. An older daemon has no `provider` settings: no group.
     ...(settings?.provider
       ? [{ id: "provider", title: "Provider", body: <ProviderSection provider={settings.provider} keySet={providerKeySet} saving={saving} save={save} request={request} onResult={(r) => (setSettings(r.settings), setProviderKeySet(!!r.providerKeySet), setError(undefined))} onError={setError} /> }]
+      : []),
+    // Permission policy for new sessions; an older daemon has no `permissions`.
+    ...(settings?.permissions
+      ? [{ id: "permissions", title: "Permissions", body: <PermissionsSection permissions={settings.permissions} saving={saving} save={save} /> }]
       : []),
     // GH-447: an older daemon has no `jira` settings: no group.
     ...(settings?.jira
