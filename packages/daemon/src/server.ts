@@ -31,6 +31,7 @@ import { createPromptQueue } from "./prompt-queue.ts";
 import { CONTINUE_GAP_MS, CONTINUE_PROMPT, createAutoContinue } from "./auto-continue.ts";
 import { listModels, queuedQuery, Session, transcriptModel, type SessionSettings, type Transcript } from "./session.ts";
 import { createTerminals } from "./terminals.ts";
+import { applyStoredProvider, providerHealth } from "./provider.ts";
 import { ConfigError, createConfig, runCli, timed, type CliRunner, type McpRequest, type SkillsRequest } from "./config.ts";
 import { createPlugins, redact, type PluginsRequest } from "./plugins.ts";
 import { searchTranscripts } from "./content-search.ts";
@@ -393,9 +394,11 @@ export function createDaemon(opts: {
   const projects = opts.projects ?? createProjects();
   const appSettings = opts.appSettings ?? createSettings();
   const secrets = opts.secrets ?? createSecrets();
+  applyStoredProvider(appSettings.get().provider, secrets.anthropicToken());
   const jira = createJira({ config: () => appSettings.get().jira, token: () => secrets.jiraToken(), ...(opts.jiraFetch && { fetch: opts.jiraFetch }) });
-  /** `settings.get` / `settings.set` / `jira.token` reply: the settings, the daemon, whether a Jira token is saved (never the token). */
-  const settingsReply = (settings = appSettings.get()) => ({ settings, daemon: daemonInfo(), jiraToken: !!secrets.jiraToken() });
+  /** `settings.get` / `settings.set` / `jira.token` reply: the settings, the daemon, whether a Jira or provider token is saved (never the token). */
+  const providerKeySet = () => !!secrets.anthropicToken() || !!process.env.ANTHROPIC_AUTH_TOKEN || !!process.env.ANTHROPIC_API_KEY;
+  const settingsReply = (settings = appSettings.get()) => ({ settings, daemon: daemonInfo(), jiraToken: !!secrets.jiraToken(), providerKeySet: providerKeySet() });
   // The monitor follows the `performance.monitor` setting: on start, on settings.set, and on its 10 s tick (another daemon's change to off).
   const perfMon = opts.perf ?? createPerf({ version: opts.buildInfo?.version, poll: () => appSettings.get().performance.monitor });
   setPerf(perfMon);
@@ -451,6 +454,10 @@ export function createDaemon(opts: {
   let models: ReturnType<typeof listModels> | undefined;
   // Sync copy for SessionInfo.permissionModes: every path that builds a SessionInfo awaits modelList() first.
   let known: ModelInfo[] = [];
+  const resetModelList = () => {
+    models = undefined;
+    known = [];
+  };
   const modelList = () =>
     (models ??= listModels(opts.query).then((l) => (known = l))).catch((e) => {
       models = undefined;
@@ -1841,8 +1848,29 @@ export function createDaemon(opts: {
             return fail("bad_settings", (err as Error).message);
           }
           const r = settingsReply();
-          broadcast({ type: "settings_changed", settings: r.settings, jiraToken: r.jiraToken });
+          broadcast({ type: "settings_changed", settings: r.settings, jiraToken: r.jiraToken, providerKeySet: r.providerKeySet });
           return reply(r);
+        }
+        case "provider.token": {
+          if (msg.token !== null && typeof msg.token !== "string") return fail("bad_settings", "token must be a string or null");
+          try {
+            secrets.setAnthropicToken(msg.token === null ? null : msg.token.trim());
+            applyStoredProvider(appSettings.get().provider, secrets.anthropicToken());
+            resetModelList();
+          } catch (err) {
+            return fail("bad_settings", (err as Error).message);
+          }
+          const r = settingsReply();
+          broadcast({ type: "settings_changed", settings: r.settings, jiraToken: r.jiraToken, providerKeySet: r.providerKeySet });
+          return reply(r);
+        }
+        case "provider.test": {
+          try {
+            return reply(await providerHealth(appSettings.get().provider, secrets.anthropicToken()));
+          } catch (err) {
+            const [code, ...rest] = (err as Error).message.split(":");
+            return fail(code || "provider_failed", rest.join(":").trim() || (err as Error).message);
+          }
         }
         case "jira.test":
         case "jira.search": {
@@ -1859,7 +1887,9 @@ export function createDaemon(opts: {
             const settings = appSettings.set(msg.patch);
             if (!settings.usageLimit.autoContinue) autoContinue.clear();
             perfMon.setEnabled(settings.performance.monitor);
-            broadcast({ type: "settings_changed", settings, jiraToken: !!secrets.jiraToken() });
+            applyStoredProvider(settings.provider, secrets.anthropicToken());
+            resetModelList();
+            broadcast({ type: "settings_changed", settings, jiraToken: !!secrets.jiraToken(), providerKeySet: providerKeySet() });
             return reply(settingsReply(settings));
           } catch (err) {
             return fail("bad_settings", (err as Error).message);

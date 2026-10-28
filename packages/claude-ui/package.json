@@ -1,6 +1,6 @@
 {
   "name": "claude-code-ui",
-  "version": "0.8.0",
+  "version": "0.9.2",
   "description": "A web UI for Claude Code: run and steer many sessions from your browser or phone. Local daemon, no cloud.",
   "type": "module",
   "bin": { "claude-ui": "dist/launcher.js" },
@@ -20,7 +20,7 @@
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.285",
     "fuzzysort": "^3.1.0",
-    "node-pty": "^1.1.0",
+    "node-pty": "1.2.0-beta.18",
     "qrcode": "^1.5.4",
     "web-push": "^3.6.7",
     "ws": "^8.22.0",

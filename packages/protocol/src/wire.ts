@@ -123,6 +123,10 @@ export type ClientMessage = { reqId: string; side?: string } & (
   | { type: "jira.test" }
   /** Ticket tab: no `text` = the Ticket filter's tickets (`settings.jira.jql`, default my open ones; 20); a key or ticket URL = that ticket; other text = summary search (inside the Ticket filter when set). Reply JiraSearchResult; errors as `jira.test`. */
   | { type: "jira.search"; text?: string }
+  /** Saves (string) or clears (null) the API-mode provider key in secrets.json; write-only. Reply SettingsResult; broadcasts `settings_changed`. */
+  | { type: "provider.token"; token: string | null }
+  /** One cheap count_tokens call with the saved provider settings. Reply `{model, latencyMs}`; errors provider_not_configured, provider_auth, provider_unreachable, provider_failed. */
+  | { type: "provider.test" }
   /** Performance data of this daemon (docs/spec.md "Performance monitor"); reply PerfReport. */
   | { type: "perf.report" }
   /** Empties the performance store; reply {}. */
@@ -350,7 +354,7 @@ export type ServerMessage =
   /** The terminal's shell exited (or it was closed); sent to every attached connection. The terminal is gone. */
   | { type: "terminal.exit"; terminalId: string; exitCode: number }
   /** To every connection of this daemon after `settings.set`. */
-  | { type: "settings_changed"; settings: Settings; jiraToken?: boolean }
+  | { type: "settings_changed"; settings: Settings; jiraToken?: boolean; providerKeySet?: boolean }
   /** On connect: this daemon runs older code than is on disk (a source checkout changed after the start, or a newer install waits for a restart). `note` says which. */
   | { type: "daemon_stale"; note: string }
   /** To every connection after a config write (e.g. `mcp.add`) in `cwd`: an open dialog of that project refreshes. `reloadFailed`: set when plugins were reloaded: the sessions whose reload failed (empty: none; restart banners then clear). */
@@ -453,6 +457,8 @@ export type WorktreeBranchesResult = { branches: BranchRow[]; defaultBase: strin
 /** A Jira ticket row of the Ticket tab. */
 export type JiraTicket = { key: string; type: string; summary: string; status: string };
 export type JiraSearchResult = { tickets: JiraTicket[] };
+/** A successful provider.test: the gateway's count_tokens reply, no generation and no key. */
+export type ProviderTestResult = { model: string; latencyMs: number };
 /** Why a worktree cannot be removed now. */
 export type WorktreeBlock = "locked" | "symlink" | "outside_roots" | "sessions_running" | "removing" | "contains_worktree";
 /**
@@ -639,6 +645,8 @@ export const AUTO_REPOSITORY_DETECTION = [true, false, "subFolders", "openEditor
 export const PARENT_FOLDER_MODES = ["always", "never", "prompt"] as const;
 export type Settings = { orchestration: { enabled: boolean; workerCap: number; /** Depth = coordinatorId hops from the root coordinator; a worker at this depth may not start workers. */ maxDepth: number; /** Live direct workers one coordinator may run. */ maxChildren: number; coordinatorPermissions: boolean; workerMode: WorkerModeSetting; /** Off: a worker's finished, needs-input and error notify nobody but its coordinator; an escalated request still does (GH-387). */ workerNotifications: boolean }; usageLimit: { autoContinue: boolean }; notifications: { desktop: boolean };
   /** Performance monitor (GH-272): measures the daemon; off stops every observer and the sampling. */
+  /** Model provider: env = whatever the launcher exported (default); subscription = claude login; api = the stored Anthropic-compatible gateway. */
+  provider: { mode: "env" | "subscription" | "api"; baseUrl: string; model: string; /** Comma-separated model ids for the picker. */ models: string; contextWindow: number; maxOutputTokens: number };
   performance: { monitor: boolean };
   /** Ticket tab of the Create worktree modal (GH-447): one Jira connection; `email` for Cloud only; the token is in secrets.json, never here. */
   jira: { url: string; email: string; template: string; /** Ticket filter: the JQL of the Ticket tab's list and text search; "" = my open tickets. */ jql: string };
@@ -661,7 +669,7 @@ export type Settings = { orchestration: { enabled: boolean; workerCap: number; /
 };
 export type SettingsPatch = { [S in keyof Settings]?: Partial<Settings[S]> };
 /** `daemon`: where the daemon runs (the desktop notification row names it) and whether it was started without desktop notifications (`--no-os-notify`). Absent from an older daemon. */
-export type SettingsResult = { settings: Settings; daemon?: { host: string; version?: string; desktopForcedOff?: true }; /** A Jira token is saved (the token itself is write-only). */ jiraToken?: boolean };
+export type SettingsResult = { settings: Settings; daemon?: { host: string; version?: string; desktopForcedOff?: true }; /** A Jira token is saved (the token itself is write-only). */ jiraToken?: boolean; /** An API-mode provider key is saved (write-only). */ providerKeySet?: boolean };
 /** Spans of the daemon the monitor times (code constants; never a user value). */
 export type PerfSpanName = "session.open" | "session.start" | "session.start.timeout" | "side.start" | "side.install" | "side.spawn" | "side.firstFrame" | "worktree.list";
 /** An event-loop block of at least 50 ms while spans were open; `spans` = the ones open then. */

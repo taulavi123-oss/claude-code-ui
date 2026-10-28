@@ -20,6 +20,7 @@ Options (a flag overrides its environment variable):
   --port <n>          port                                   (PORT, default 4280)
   --roots <paths>     allowlisted directories, separated like PATH
                                                              (CLAUDE_UI_ROOTS, default: home directory)
+  --host <address>    bind address, e.g. 0.0.0.0; --lan is the wildcard shortcut
   --hostname <name>   HTTPS name of a private VPN proxy, e.g. tailscale serve
                                                              (CLAUDE_UI_HOSTNAME)
   --tailscale         serve on your tailnet with tailscale serve and print its https link
@@ -35,6 +36,13 @@ Options (a flag overrides its environment variable):
                                                              (CLAUDE_UI_OPEN=0)
   -v, --version       print the version
   -h, --help          print this help
+
+API provider mode:
+  CLAUDE_UI_PROVIDER_MODE=api      use an Anthropic Messages API-compatible gateway
+  ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL
+  CLAUDE_UI_MODELS                 comma-separated model ids (optional)
+  CLAUDE_UI_CONTEXT_WINDOW         context tokens exposed to the UI (optional)
+  CLAUDE_UI_MAX_OUTPUT_TOKENS      output cap (optional)
 `;
 
 /** Printed under a usage error; the full HELP is for `--help`. */
@@ -44,7 +52,7 @@ export const USAGE_HINT = "Usage: claude-ui [options] | claude-ui update | claud
 export const PHONE_HINT = "Phone: open the link, then Install app (Android Chrome) or Share > Add to Home Screen (iOS Safari); on iOS paste the link into the app's pairing field.";
 
 /** `side`: run as a WSL side of a Windows daemon (sides.ts): wire protocol over stdio, no HTTP. Not in HELP: the Windows daemon starts it. */
-export type Cli = { kind: "run"; port: number; roots: string[]; hostname: string | undefined; lan: boolean; allowBypass: boolean; idleCloseMinutes: number; tailscale?: true; side?: boolean; updateCheck?: false; osNotify?: false; open?: false } | { kind: "update" } | { kind: "client"; cmd: ClientCmd; json: boolean; port?: number; tokenFile?: string; sessionId?: string; print?: true; project?: string; state?: string; archived?: true } | { kind: "help" } | { kind: "version" } | { kind: "error"; message: string };
+export type Cli = { kind: "run"; port: number; roots: string[]; hostname: string | undefined; host?: string; lan: boolean; allowBypass: boolean; idleCloseMinutes: number; tailscale?: true; side?: boolean; updateCheck?: false; osNotify?: false; open?: false } | { kind: "update" } | { kind: "client"; cmd: ClientCmd; json: boolean; port?: number; tokenFile?: string; sessionId?: string; print?: true; project?: string; state?: string; archived?: true } | { kind: "help" } | { kind: "version" } | { kind: "error"; message: string };
 
 export type ClientCmd = "status" | "open" | "sessions" | "projects" | "workers";
 const CLIENT_CMDS: Record<string, ClientCmd> = { status: "status", open: "open", sessions: "sessions", ls: "sessions", projects: "projects", workers: "workers" };
@@ -67,9 +75,9 @@ export function isDaemonRun(argv: string[]) {
   }
   return true;
 }
-const VALUE_FLAGS = ["--port", "--roots", "--hostname", "--token-file", "--project", "--state"];
+const VALUE_FLAGS = ["--port", "--roots", "--host", "--hostname", "--token-file", "--project", "--state"];
 const NOT_A_START = [...Object.keys(CLIENT_CMDS), ...RESERVED, "update"];
-const DAEMON_ONLY = ["lan", "roots", "hostname", "tailscale", "allow-bypass", "no-update-check", "no-os-notify", "no-open", "side"];
+const DAEMON_ONLY = ["lan", "roots", "host", "hostname", "tailscale", "allow-bypass", "no-update-check", "no-os-notify", "no-open", "side"];
 
 export function parseCli(argv: string[], env: NodeJS.ProcessEnv, home: string): Cli {
   let values;
@@ -78,7 +86,7 @@ export function parseCli(argv: string[], env: NodeJS.ProcessEnv, home: string): 
     const r = parseArgs({
       args: argv,
       allowPositionals: true,
-      options: { "no-update-check": { type: "boolean" }, "no-os-notify": { type: "boolean" }, "no-open": { type: "boolean" }, port: { type: "string" }, roots: { type: "string" }, hostname: { type: "string" }, tailscale: { type: "boolean" }, lan: { type: "boolean" }, "allow-bypass": { type: "boolean" }, json: { type: "boolean" }, "token-file": { type: "string" }, print: { type: "boolean" }, project: { type: "string" }, state: { type: "string" }, archived: { type: "boolean" }, side: { type: "boolean" }, version: { type: "boolean", short: "v" }, help: { type: "boolean", short: "h" } },
+      options: { "no-update-check": { type: "boolean" }, "no-os-notify": { type: "boolean" }, "no-open": { type: "boolean" }, port: { type: "string" }, roots: { type: "string" }, host: { type: "string" }, hostname: { type: "string" }, tailscale: { type: "boolean" }, lan: { type: "boolean" }, "allow-bypass": { type: "boolean" }, json: { type: "boolean" }, "token-file": { type: "string" }, print: { type: "boolean" }, project: { type: "string" }, state: { type: "string" }, archived: { type: "boolean" }, side: { type: "boolean" }, version: { type: "boolean", short: "v" }, help: { type: "boolean", short: "h" } },
     });
     values = r.values;
     positionals = r.positionals;
@@ -120,6 +128,7 @@ export function parseCli(argv: string[], env: NodeJS.ProcessEnv, home: string): 
   const port = Number(rawPort);
   if (!/^\d+$/.test(rawPort) || port > 65535) return { kind: "error", message: `invalid port: ${rawPort}` };
   const hostname = values.hostname ?? env.CLAUDE_UI_HOSTNAME;
+  const host = values.host ?? env.CLAUDE_UI_HOST;
   const tailscale = values.tailscale ?? env.CLAUDE_UI_TAILSCALE === "1";
   if (tailscale && hostname) return { kind: "error", message: "--tailscale sets the hostname itself; drop --hostname / CLAUDE_UI_HOSTNAME" };
   const rawIdle = env.CLAUDE_UI_IDLE_CLOSE_MINUTES ?? "10";
@@ -129,7 +138,8 @@ export function parseCli(argv: string[], env: NodeJS.ProcessEnv, home: string): 
     port,
     roots: (values.roots ?? env.CLAUDE_UI_ROOTS ?? home).split(delimiter).filter(Boolean),
     hostname,
-    lan: values.lan ?? env.CLAUDE_UI_LAN === "1",
+    ...(host && { host }),
+    lan: (values.lan ?? env.CLAUDE_UI_LAN === "1") || host === "0.0.0.0" || host === "::",
     allowBypass: values["allow-bypass"] ?? env.CLAUDE_UI_ALLOW_BYPASS === "1",
     ...(tailscale && { tailscale: true as const }),
     idleCloseMinutes: Number(rawIdle),

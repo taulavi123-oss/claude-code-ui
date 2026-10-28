@@ -28,6 +28,7 @@ import { configDir, loadToken, pairingUrl } from "./token.ts";
 import { defaultUploadsDir } from "./uploads.ts";
 import { installVersion, latestNewer, parseRegistry, pruneVersions, versionsDir } from "./update.ts";
 import { createBuildInfo } from "./build-info.ts";
+import { providerConfigError } from "./provider.ts";
 
 const cli = parseCli(process.argv.slice(2), process.env, homedir());
 // The exit line is for a daemon's log; a client command, update, help or a usage error prints only its own output.
@@ -73,7 +74,13 @@ if (cli.kind === "update") {
   console.log(`claude-ui ${latest} installed; it runs from the next start of claude-ui.`);
   process.exit(0);
 }
-const { port, roots, lan, allowBypass, idleCloseMinutes, side, updateCheck, osNotify, tailscale, open } = cli;
+const providerError = providerConfigError(process.env);
+
+if (providerError) {
+  console.error(`claude-ui: ${providerError}`);
+  process.exit(1);
+}
+const { port, roots, lan, host, allowBypass, idleCloseMinutes, side, updateCheck, osNotify, tailscale, open } = cli;
 let hostname = cli.hostname;
 // ponytail: LAN addresses are read once at start; an address the network assigns later is refused until a restart.
 const lanIps = lan ? Object.values(networkInterfaces()).flat().filter((a) => a && a.family === "IPv4" && !a.internal && !a.address.startsWith("169.254.")).map((a) => a!.address) : [];
@@ -157,7 +164,7 @@ if (side) {
   // A source checkout compares its files with the start; a release compares its version with the installed ones (build-info.ts).
   const buildInfo = createBuildInfo({ version, srcDirs: [fileURLToPath(new URL("../src", import.meta.url)), fileURLToPath(new URL("../../protocol/src", import.meta.url))], versionsDir: versionsDir() });
   const server = createDaemon({ webRoot, token, roots, push, allowBypass, idleCloseMs: idleCloseMinutes * 60_000, ...state, hostnames, sides, update, buildInfo, desktopForcedOff: osNotify === false, warmUp: true });
-  server.listen(port, lan ? "0.0.0.0" : "127.0.0.1", async () => {
+  server.listen(port, host ?? (lan ? "0.0.0.0" : "127.0.0.1"), async () => {
     // Where this daemon listens, for the client commands (no token in it); gone with the process.
     const dir = configDir();
     try {
