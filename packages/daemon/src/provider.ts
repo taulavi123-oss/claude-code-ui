@@ -75,8 +75,10 @@ export function applyStoredProvider(provider: ProviderSettings, token?: string) 
   process.env.CLAUDE_UI_MODELS = provider.models.trim();
   process.env.CLAUDE_UI_CONTEXT_WINDOW = String(provider.contextWindow);
   process.env.CLAUDE_UI_MAX_OUTPUT_TOKENS = String(provider.maxOutputTokens);
+  // A key saved in the UI wins. Without one, keep the key the launcher
+  // exported from vip.env: deleting it logged the CLI out ("Please run
+  // /login") the moment API mode was selected but no key was typed.
   if (token) process.env.ANTHROPIC_AUTH_TOKEN = token;
-  else delete process.env.ANTHROPIC_AUTH_TOKEN;
 }
 
 /** The settings the daemon should use: env keeps the launcher's environment. */
@@ -87,7 +89,12 @@ export function resolvedProvider(provider: ProviderSettings, token?: string) {
     const key = (token ?? process.env.ANTHROPIC_AUTH_TOKEN ?? process.env.ANTHROPIC_API_KEY ?? "").trim();
     return { mode: ((process.env.CLAUDE_UI_PROVIDER_MODE ?? "").trim().toLowerCase() === "api" ? "api" : "subscription") as "api" | "subscription", baseUrl, model, key };
   }
-  return { mode: provider.mode, baseUrl: provider.baseUrl.trim(), model: provider.model.trim(), key: (token ?? "").trim() };
+  // API mode still falls back to the launcher's environment for anything the
+  // form left empty, so Test connection works with the key in vip.env.
+  const baseUrl = provider.baseUrl.trim() || (process.env.ANTHROPIC_BASE_URL ?? "").trim();
+  const model = provider.model.trim() || (process.env.ANTHROPIC_MODEL ?? "").trim();
+  const key = (token ?? process.env.ANTHROPIC_AUTH_TOKEN ?? process.env.ANTHROPIC_API_KEY ?? "").trim();
+  return { mode: provider.mode, baseUrl, model, key };
 }
 
 /** One cheap request; never generates tokens and never returns the key. */
