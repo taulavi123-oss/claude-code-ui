@@ -2,6 +2,12 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.9.2 - 2026-10-28
+
+- Settings now shows the Provider group. The section existed but was never
+  added to the dialog's group list, so a custom API endpoint could not be
+  configured from the UI.
+
 ## 0.9.1 - 2026-10-28
 
 ### Added

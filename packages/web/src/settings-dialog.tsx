@@ -605,6 +605,10 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
     ...(onRestartGuide ? [{ id: "guide", title: "Guide", body: <GuideSection onRestart={onRestartGuide} /> }] : []),
     // A section the daemon does not know (an older daemon lacks `performance`) is left out.
     ...SECTIONS.filter((sec) => !settings || settings[sec.id]).map((sec) => ({ id: sec.id, title: sec.title, body: sec.id === "usageLimit" ? <>{daemonSection(sec)}<UsageRingRow /></> : sec.id === "performance" ? <>{daemonSection(sec)}<PerformanceSection request={request} /></> : daemonSection(sec) })),
+    // Opt-in API provider. An older daemon has no `provider` settings: no group.
+    ...(settings?.provider
+      ? [{ id: "provider", title: "Provider", body: <ProviderSection provider={settings.provider} keySet={providerKeySet} saving={saving} save={save} request={request} onResult={(r) => (setSettings(r.settings), setProviderKeySet(!!r.providerKeySet), setError(undefined))} onError={setError} /> }]
+      : []),
     // GH-447: an older daemon has no `jira` settings: no group.
     ...(settings?.jira
       ? [{ id: "jira", title: "Jira", body: <JiraSection jira={settings.jira} tokenSet={jiraToken} saving={saving} save={save} request={request} onResult={(r) => (setSettings(r.settings), setJiraToken(!!r.jiraToken), setError(undefined))} onError={setError} /> }]

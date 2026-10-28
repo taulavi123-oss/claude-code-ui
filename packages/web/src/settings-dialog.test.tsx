@@ -295,7 +295,7 @@ it("shows a Guide section whose Restart guide button calls onRestartGuide", asyn
 it("lists the groups: Timeline first, Guide after Tabs, the daemon's groups last", async () => {
   const { q } = await render();
   const ids = [...document.querySelectorAll('[role=tab]')].map((t) => t.textContent);
-  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Terminal", "Tabs", "Keyboard", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Jira", "About"]);
+  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Terminal", "Tabs", "Keyboard", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Provider", "Jira", "About"]);
   expect(q("settings-groups")?.getAttribute("role")).toBe("tablist");
 });
 
