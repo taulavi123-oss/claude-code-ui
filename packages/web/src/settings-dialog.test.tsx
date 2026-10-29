@@ -20,7 +20,7 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-async function render({ failGet = false, group, daemon = { host: "box" } as { host: string; version?: string; desktopForcedOff?: true } | null, push = { on: false, supported: true, busy: false, error: undefined as string | undefined } }: { failGet?: boolean; group?: string; daemon?: { host: string; version?: string; desktopForcedOff?: true } | null; push?: { on: boolean; supported: boolean; busy: boolean; error: string | undefined } } = {}) {
+async function render({ failGet = false, group, policy = "ask", modes = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"], daemon = { host: "box" } as { host: string; version?: string; desktopForcedOff?: true } | null, push = { on: false, supported: true, busy: false, error: undefined as string | undefined } }: { failGet?: boolean; group?: string; policy?: "ask" | "auto" | "deny"; modes?: string[]; daemon?: { host: string; version?: string; desktopForcedOff?: true } | null; push?: { on: boolean; supported: boolean; busy: boolean; error: string | undefined } } = {}) {
   const toggle = vi.fn();
   localStorage.removeItem("claude-ui.settingsGroup");
   if (group) localStorage.setItem("claude-ui.settingsGroup", group);
@@ -29,7 +29,7 @@ async function render({ failGet = false, group, daemon = { host: "box" } as { ho
   const onTabCompact = vi.fn();
   const onTabAutoClose = vi.fn();
   const onShortcuts = vi.fn();
-  let settings: Settings = { orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: true, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy: "ask" }, performance: { monitor: true }, jira: { url: "", email: "", template: "{type}/{key}-{summary}", jql: "" }, git: { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, repositoryScanIgnoredFolders: ["node_modules"], scanRepositories: [], ignoredRepositories: [], detectSubmodules: true, detectSubmodulesLimit: 10, ignoreSubmodules: false, openRepositoryInParentFolders: "always" } };
+  let settings: Settings = { orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: true, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy }, performance: { monitor: true }, jira: { url: "", email: "", template: "{type}/{key}-{summary}", jql: "" }, git: { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, repositoryScanIgnoredFolders: ["node_modules"], scanRepositories: [], ignoredRepositories: [], detectSubmodules: true, detectSubmodulesLimit: 10, ignoreSubmodules: false, openRepositoryInParentFolders: "always" } };
   let refuse: string | undefined;
   const calls: Request[] = [];
   let jiraToken = false;
@@ -45,7 +45,7 @@ async function render({ failGet = false, group, daemon = { host: "box" } as { ho
     if (msg.type === "perf.report") return { daemon: { pid: 1, since: 0, monitor: settings.performance.monitor, eld: { resolutionMs: 50 }, elu: 0, handlers: {}, spans: {}, children: {}, memory: [], worst: [], cost: { ownMs: 0, wallMs: 0 } } };
     if (msg.type === "jira.token") jiraToken = msg.token !== null;
     if (msg.type === "jira.test") return { user: "Ann Example" };
-    return { settings, ...(daemon && { daemon }), jiraToken };
+    return { settings, ...(daemon && { daemon }), jiraToken, permissionModes: modes as never };
   });
   const el = document.createElement("div");
   const prompt = document.createElement("textarea");
@@ -723,4 +723,16 @@ it("list buttons are 44px below md", async () => {
   await act(async () => q(`${id}-add`)!.click());
   expect(q(`${id}-ok`)!.className).toContain("max-md:h-11");
   expect(q(`${id}-input`)!.className).toContain("max-md:h-11");
+});
+
+it("warns when Auto accept cannot use bypass on this daemon", async () => {
+  const { q, pick } = await render({ policy: "auto", modes: ["default", "acceptEdits", "plan", "dontAsk"] });
+  await pick("permissions");
+  expect(q("settings-permissions-bypass-off")).not.toBeNull();
+});
+
+it("offers Auto accept without a warning when the daemon allows bypass", async () => {
+  const { q, pick } = await render({ policy: "auto" });
+  await pick("permissions");
+  expect(q("settings-permissions-bypass-off")).toBeNull();
 });
