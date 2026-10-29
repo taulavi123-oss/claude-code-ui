@@ -1,8 +1,8 @@
 // Settings › Provider: opt-in Anthropic-compatible API mode. The key is write-only (secrets.json); this page only learns
 // whether one is saved. Subscription and env modes keep the previous behavior.
-import { useState } from "react";
-import { LoaderCircleIcon } from "lucide-react";
-import type { ProviderTestResult, Settings, SettingsPatch, SettingsResult } from "@claude-ui/protocol";
+import { useEffect, useState } from "react";
+import { LoaderCircleIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import type { ProviderModelsResult, ProviderTestResult, Settings, SettingsPatch, SettingsResult } from "@claude-ui/protocol";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Request } from "./client.ts";
@@ -20,6 +20,7 @@ type Props = {
 
 const INPUT = "h-8 w-full rounded-md border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11";
 const ROW = "flex flex-col gap-1 border-t py-2";
+const splitModels = (value: string) => value.split(",").map((m) => m.trim()).filter(Boolean);
 
 export function ProviderSection({ provider, keySet, saving, save, request, onResult, onError }: Props) {
   const [draft, setDraft] = useState<Partial<Record<"baseUrl" | "model" | "models" | "contextWindow" | "maxOutputTokens", string>>>({});
@@ -27,7 +28,14 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [test, setTest] = useState<{ ok: boolean; text: string }>();
+  const [models, setModels] = useState<string[]>(() => splitModels(provider.models));
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string>();
+  const [available, setAvailable] = useState<string[]>([]);
+  const [modelQuery, setModelQuery] = useState("");
   const api = provider.mode === "api";
+
+  useEffect(() => setModels(splitModels(provider.models)), [provider.models]);
 
   const commit = (k: "baseUrl" | "model" | "models") => {
     const v = draft[k];
@@ -111,6 +119,32 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
     }
   };
 
+  const saveModels = (next: string[]) => {
+    const clean = [...new Set(next.map((m) => m.trim()).filter(Boolean))];
+    setModels(clean);
+    setTest(undefined);
+    void save({ provider: { models: clean.join(", ") } });
+  };
+
+  const fetchModels = async () => {
+    setFetching(true);
+    setFetchError(undefined);
+    try {
+      const r = await request<ProviderModelsResult>({ type: "provider.models" });
+      // A gateway can report thousands of ids; keep them for the search field
+      // instead of dumping every one into the saved list.
+      setAvailable([...new Set(r.models.map((m) => m.trim()).filter(Boolean))]);
+      setModelQuery("");
+    } catch (e) {
+      setFetchError((e as Error).message);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const query = modelQuery.trim().toLowerCase();
+  const matches = (query ? available.filter((id) => id.toLowerCase().includes(query)) : []).slice(0, 20);
+
   return (
     <section aria-labelledby="settings-provider" className="flex flex-col" data-testid="settings-provider">
       <h3 id="settings-provider" className="pb-1 font-medium text-[13px] text-muted-foreground">
@@ -136,7 +170,114 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
         <>
           {field("baseUrl", "Base URL", "Anthropic Messages API base, for example https://gateway.example (no /v1 suffix).", "https://gateway.example")}
           {field("model", "Default model", "The model id sent to the gateway, including any vendor prefix.", "vendor/model")}
-          {field("models", "Model list", "Optional comma-separated ids for the model picker. Empty: the default model.", "vendor/model, vendor/model-fast")}
+          <div className={ROW} data-testid="settings-provider-models">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm">Models</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="cursor-pointer max-md:h-11"
+                disabled={fetching || saving || !provider.baseUrl || !keySet}
+                onClick={() => void fetchModels()}
+                data-testid="settings-provider-fetch-models"
+              >
+                {fetching && <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" aria-hidden />}
+                Fetch available models
+              </Button>
+            </div>
+            {available.length > 0 && (
+              <div className="flex flex-col gap-1 rounded-md border bg-muted/30 p-2">
+                <input
+                  type="text"
+                  value={modelQuery}
+                  placeholder={`Search ${available.length} models`}
+                  aria-label="Search fetched models"
+                  className={INPUT}
+                  data-testid="settings-provider-model-search"
+                  onChange={(e) => setModelQuery(e.target.value)}
+                />
+                {query &&
+                  matches.map((id) => (
+                    <div key={id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate font-mono text-xs" title={id}>
+                        {id}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="cursor-pointer max-md:h-11"
+                        disabled={saving || models.includes(id)}
+                        onClick={() => saveModels([...models, id])}
+                        data-testid="settings-provider-model-pick"
+                      >
+                        {models.includes(id) ? "Added" : "Add"}
+                      </Button>
+                    </div>
+                  ))}
+                {query && !matches.length && <span className="text-xs text-muted-foreground">No model id matches.</span>}
+                {!query && <span className="text-muted-foreground text-xs">Type part of a model id to filter.</span>}
+              </div>
+            )}
+            {models.map((id, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={id}
+                  placeholder="Model ID"
+                  aria-label={`Model ${index + 1}`}
+                  disabled={saving}
+                  className={INPUT}
+                  data-testid={`settings-provider-model-${index}`}
+                  onChange={(e) => setModels(models.map((m, i) => (i === index ? e.target.value : m)))}
+                  onBlur={() => (models[index]?.trim() ? saveModels(models) : setModels(models.filter((_, i) => i !== index)))}
+                  onKeyDown={(e) => e.key === "Enter" && !isImeKey(e.nativeEvent) && e.currentTarget.blur()}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="cursor-pointer max-md:h-11 max-md:w-11"
+                  aria-label={`Remove ${id || "model"}`}
+                  disabled={saving}
+                  onClick={() => saveModels(models.filter((_, i) => i !== index))}
+                  data-testid={`settings-provider-model-remove-${index}`}
+                >
+                  <Trash2Icon aria-hidden />
+                </Button>
+              </div>
+            ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer max-md:h-11"
+                disabled={saving}
+                onClick={() => setModels([...models, ""])}
+                data-testid="settings-provider-model-add"
+              >
+                <PlusIcon aria-hidden /> Add model
+              </Button>
+              {provider.model && !models.includes(provider.model) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="cursor-pointer max-md:h-11"
+                  disabled={saving}
+                  onClick={() => saveModels([...models, provider.model])}
+                  data-testid="settings-provider-model-add-default"
+                >
+                  Add default model
+                </Button>
+              )}
+            </div>
+            {fetchError && (
+              <span role="alert" className="text-xs text-destructive" data-testid="settings-provider-fetch-error">
+                {fetchError}
+              </span>
+            )}
+            <span className="text-muted-foreground text-xs">
+              IDs offered in the model picker. Empty: only the default model.
+            </span>
+          </div>
           {numberField("contextWindow", "Context window (tokens)", "Exposed to the UI and passed to Claude Code as its context limit.")}
           {numberField("maxOutputTokens", "Maximum output tokens", "Passed to Claude Code as the output cap for most requests.")}
           <div className={ROW}>

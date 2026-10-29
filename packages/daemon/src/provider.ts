@@ -97,6 +97,34 @@ export function resolvedProvider(provider: ProviderSettings, token?: string) {
   return { mode: provider.mode, baseUrl, model, key };
 }
 
+/** Model ids from the gateway (`GET /v1/models`); the same key resolution as a query. */
+export async function providerModels(provider: ProviderSettings, token?: string): Promise<{ models: string[] }> {
+  const p = resolvedProvider(provider, token);
+  if (p.mode !== "api") throw new Error("provider_not_configured: switch Provider mode to API and save the endpoint");
+  if (!p.baseUrl) throw new Error("provider_not_configured: base URL is required");
+  if (!p.key) throw new Error("provider_not_configured: an API key is required");
+  let response: Response;
+  try {
+    response = await fetch(`${p.baseUrl.replace(/\/+$/, "")}/v1/models`, {
+      headers: { "anthropic-version": "2023-06-01", authorization: `Bearer ${p.key}`, "x-api-key": p.key },
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (e) {
+    throw new Error(`provider_unreachable: ${(e as Error).message}`);
+  }
+  if (response.status === 401 || response.status === 403) throw new Error("provider_auth: the gateway rejected the key");
+  if (!response.ok) throw new Error(`provider_failed: HTTP ${response.status}`);
+  const body = (await response.json().catch(() => undefined)) as
+    | { data?: Array<{ id?: unknown } | string>; models?: Array<{ id?: unknown } | string> }
+    | undefined;
+  const rows = body?.data ?? body?.models ?? [];
+  const models = rows
+    .map((row) => (typeof row === "string" ? row : typeof row?.id === "string" ? row.id : ""))
+    .filter(Boolean);
+  if (!models.length) throw new Error("provider_empty: the gateway returned no model ids");
+  return { models };
+}
+
 /** One cheap request; never generates tokens and never returns the key. */
 export async function providerHealth(provider: ProviderSettings, token?: string): Promise<{ model: string; latencyMs: number }> {
   const p = resolvedProvider(provider, token);
