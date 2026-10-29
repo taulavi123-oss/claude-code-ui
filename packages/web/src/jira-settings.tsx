@@ -20,7 +20,7 @@ type Props = {
 };
 
 const INPUT = "h-8 w-full rounded-md border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11";
-const ROW = "flex flex-col gap-1 border-t py-2";
+const ROW = "flex flex-col gap-1 border-t py-3 first:border-t-0 first:pt-0";
 
 export function JiraSection({ jira, tokenSet, saving, save, request, onResult, onError }: Props) {
   const [draft, setDraft] = useState<Partial<Record<"url" | "email" | "template" | "jql", string>>>({});
@@ -85,10 +85,7 @@ export function JiraSection({ jira, tokenSet, saving, save, request, onResult, o
   };
 
   return (
-    <section aria-labelledby="settings-jira" className="flex flex-col" data-testid="settings-jira">
-      <h3 id="settings-jira" className="pb-1 font-medium text-[13px] text-muted-foreground">
-        Jira
-      </h3>
+    <section aria-label="Jira" className="flex flex-col" data-testid="settings-jira">
       {field("url", "Jira URL", "Cloud: https://<site>.atlassian.net. Data Center or Server: the address of your Jira.", { type: "url", placeholder: "https://acme.atlassian.net" })}
       {cloud && field("email", "Email", "Your Atlassian account email (Jira Cloud only).", { type: "email" })}
       <div className={ROW}>
@@ -136,7 +133,7 @@ export function JiraSection({ jira, tokenSet, saving, save, request, onResult, o
       </div>
       {field("template", "Branch template", "{type}: bugfix for a Bug, feature for a Story, Task or New Feature, else empty. {key}: the ticket key. {summary}: the summary, shortened.")}
       {field("jql", "Ticket filter (JQL)", "The tickets the Create worktree modal lists, e.g. project = ABC AND statusCategory != Done. Typed text searches inside it. Empty: your open tickets.", { placeholder: MY_OPEN_JQL })}
-      <div className="flex flex-wrap items-center gap-2 border-t py-2">
+      <div className="flex flex-wrap items-center gap-2 border-t py-3">
         <Button variant="outline" size="sm" className="cursor-pointer max-md:h-11" disabled={busy || !jira.url || !tokenSet} onClick={() => void testConnection()} data-testid="settings-jira-test">
           {busy && <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" aria-hidden />}
           Test connection

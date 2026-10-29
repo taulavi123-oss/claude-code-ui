@@ -28,7 +28,7 @@ import { KeyTipsRow } from "./key-tip.tsx";
 import {
   ActivityIcon, BellIcon, ChevronLeftIcon, CompassIcon, CpuIcon, GaugeIcon,
   GitBranchIcon, GitCompareIcon, InfoIcon, KeyboardIcon, MonitorIcon,
-  PanelLeftIcon, PlugIcon, SendIcon, ShieldCheckIcon, SquareStackIcon,
+  PanelLeftIcon, PlugIcon, SendIcon, ShieldCheckIcon, SparklesIcon, SquareStackIcon,
   TerminalIcon, TicketIcon, WorkflowIcon, type LucideIcon,
 } from "lucide-react";
 import { ListSetting } from "./list-setting.tsx";
@@ -46,6 +46,7 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
   terminal: TerminalIcon,
   tabs: SquareStackIcon,
   keyboard: KeyboardIcon,
+  skills: SparklesIcon,
   guide: CompassIcon,
   orchestration: WorkflowIcon,
   usageLimit: GaugeIcon,
@@ -67,6 +68,7 @@ const GROUP_HINTS: Record<string, string> = {
   terminal: "The terminal dock and its shell.",
   tabs: "Tab grouping and when old tabs close.",
   keyboard: "See and rebind every shortcut.",
+  skills: "Turn the project's skills on or off, and see what each one costs.",
   guide: "Replay the guided tour.",
   orchestration: "Let sessions start and supervise worker sessions.",
   usageLimit: "What happens when the plan's usage limit resets.",
@@ -271,7 +273,7 @@ const SECTIONS: { id: keyof Settings; title: string; rows: Row[] }[] = [
 export type PushUi = { on: boolean; supported: boolean; busy: boolean; error?: string; toggle: () => void };
 
 /** `changed`: bumped when another client changed the settings (reloads them). */
-export function SettingsDialog({ open, changed = 0, request, onClose, tabGrouping, onTabGrouping, tabCompact = false, onTabCompact, tabAutoClose = "off", onTabAutoClose, onShortcuts, onRestartGuide, push }: { tabAutoClose?: AutoClose; onTabAutoClose?: (v: AutoClose) => void; push?: PushUi; open: boolean; changed?: number; request: <T>(msg: Request) => Promise<T>; onClose: () => void; tabGrouping?: TabGrouping; onTabGrouping?: (g: TabGrouping) => void; tabCompact?: boolean; onTabCompact?: (on: boolean) => void; onShortcuts?: () => void; onRestartGuide?: () => void }) {
+export function SettingsDialog({ open, changed = 0, request, onClose, tabGrouping, onTabGrouping, tabCompact = false, onTabCompact, tabAutoClose = "off", onTabAutoClose, onShortcuts, onRestartGuide, onSkills, push }: { tabAutoClose?: AutoClose; onTabAutoClose?: (v: AutoClose) => void; push?: PushUi; open: boolean; changed?: number; request: <T>(msg: Request) => Promise<T>; onClose: () => void; tabGrouping?: TabGrouping; onTabGrouping?: (g: TabGrouping) => void; tabCompact?: boolean; onTabCompact?: (on: boolean) => void; onShortcuts?: () => void; onRestartGuide?: () => void; /** Opens the Skills center for the shown project. */ onSkills?: () => void }) {
   const [settings, setSettings] = useState<Settings>();
   const [error, setError] = useState<string>();
   const [daemon, setDaemon] = useState<SettingsResult["daemon"]>();
@@ -346,12 +348,9 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
     <>
       {!settings && !error && <p className="text-muted-foreground text-sm">Loading…</p>}
       {settings && (
-    <section key={sec.id} aria-labelledby={`settings-${sec.id}`} className="flex flex-col" data-testid={`settings-${sec.id}`}>
-      <h3 id={`settings-${sec.id}`} className="pb-1 font-medium text-[13px] text-muted-foreground">
-        {sec.title}
-      </h3>
+    <section key={sec.id} aria-label={sec.title} className="flex flex-col" data-testid={`settings-${sec.id}`}>
       {sec.id === "git" && (
-        <p className="pb-1 text-muted-foreground text-xs" data-testid="settings-git-intro">
+        <p className="pb-2 text-muted-foreground text-xs" data-testid="settings-git-intro">
           Same settings as VS Code's Git extension; they apply to every project.
         </p>
       )}
@@ -361,7 +360,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
         const patch = (v: unknown) => ({ [sec.id]: { [row.key]: v } }) as SettingsPatch;
         if (row.kind === "list") return <ListSetting key={row.key} id={id} label={row.label} hint={row.hint} value={value as string[]} saving={saving} onSave={(next) => save(patch(next), undefined, true)} />;
         return (
-          <div key={row.key} className="flex items-center gap-3 border-t py-2 max-md:min-h-11">
+          <div key={row.key} className="flex items-center gap-3 border-t py-2.5 first:border-t-0 first:pt-0 max-md:min-h-11">
             <div className="min-w-0 flex-1">
               <label htmlFor={id} className="block text-sm">{row.label}</label>
               <span id={`${id}-hint`} className="block text-muted-foreground text-xs">{row.hint}</span>
@@ -652,6 +651,30 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
           },
         ]
       : []),
+    ...(onSkills
+      ? [
+          {
+            id: "skills",
+            title: "Skills",
+            body: (
+              <section aria-label="Skills" className="flex flex-col" data-testid="settings-skills">
+                <div className="flex items-center gap-3 py-1 max-md:min-h-11">
+                  <div className="min-w-0 flex-1">
+                    <span id="settings-skills-label" className="block text-sm">Skills center</span>
+                    <span id="settings-skills-hint" className="block text-muted-foreground text-xs">
+                      Every command of this project, and for skills their source and token cost. Turn one on or off, name-only or
+                      user-only.
+                    </span>
+                  </div>
+                  <button type="button" onClick={onSkills} aria-describedby="settings-skills-hint" className="h-8 cursor-pointer rounded-md border px-3 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring max-md:h-11" data-testid="settings-open-skills">
+                    Open
+                  </button>
+                </div>
+              </section>
+            ),
+          },
+        ]
+      : []),
     ...(onRestartGuide ? [{ id: "guide", title: "Guide", body: <GuideSection onRestart={onRestartGuide} /> }] : []),
     // A section the daemon does not know (an older daemon lacks `performance`) is left out.
     ...SECTIONS.filter((sec) => !settings || settings[sec.id]).map((sec) => ({ id: sec.id, title: sec.title, body: sec.id === "usageLimit" ? <>{daemonSection(sec)}<UsageRingRow /></> : sec.id === "performance" ? <>{daemonSection(sec)}<PerformanceSection request={request} /></> : daemonSection(sec) })),
@@ -700,7 +723,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
     <ConfigDialog title="Settings" open={open} onClose={onClose} testId="settings-dialog" wide>
       {error && <Banner kind="error">{error}</Banner>}
       <div className="flex min-h-0 gap-0 md:h-[560px] max-md:flex-1" data-testid="settings-layout">
-        <div role="tablist" aria-label="Settings groups" aria-orientation="vertical" onKeyDown={onListKey} className={`flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r pr-2 max-md:w-full max-md:border-r-0 ${drilled ? "max-md:hidden" : ""}`} data-testid="settings-groups">
+        <div role="tablist" aria-label="Settings groups" aria-orientation="vertical" onKeyDown={onListKey} className={`flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r pr-2 max-md:w-full max-md:border-r-0 max-md:pb-2 ${drilled ? "max-md:hidden" : ""}`} data-testid="settings-groups">
           {groups.map((g) => {
             const Icon = GROUP_ICONS[g.id] ?? InfoIcon;
             return (
@@ -723,12 +746,12 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
             );
           })}
         </div>
-        <div role="tabpanel" id="settings-panel" aria-labelledby={`settings-tab-${selected.id}`} className={`flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-5 ${drilled ? "" : "max-md:hidden"}`} data-testid="settings-panel">
+        <div role="tabpanel" id="settings-panel" aria-labelledby={`settings-tab-${selected.id}`} className={`flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-5 ${drilled ? "" : "max-md:hidden"}`} data-testid="settings-panel">
           <button ref={backRef} type="button" onClick={back} className="flex h-11 items-center gap-1 self-start rounded-md pr-3 text-muted-foreground text-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring md:hidden" data-testid="settings-back">
             <ChevronLeftIcon className="size-4" />
             Settings
           </button>
-          <header className="flex flex-col gap-1 pt-1">
+          <header className="sticky top-0 z-10 -mx-1 flex flex-col gap-0.5 bg-card/95 px-1 pt-1 pb-2 backdrop-blur-sm">
             <h2 className="font-semibold text-lg tracking-tight">{selected.title}</h2>
             {GROUP_HINTS[selected.id] && (
               <p className="text-muted-foreground text-xs leading-relaxed">{GROUP_HINTS[selected.id]}</p>

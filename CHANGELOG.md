@@ -2,6 +2,24 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.13.0 - 2026-10-29
+
+- Settings › Skills: a Skills center entry that opens the slash-command dialog,
+  where each skill is turned on, name-only, user-only or off.
+- Sidebar: the open/hidden choice is remembered per browser
+  (`claude-ui.sidebarOpen`).
+- Signal only: a folded run lists the files it edited, each with its line
+  counts (`+43 -0`), summed when the same file is edited twice.
+- Settings: one title per page (the card no longer repeats the header), the
+  first row has no divider, and the header sticks while the card scrolls.
+
+## 0.12.2 - 2026-10-29
+
+- Settings: one title per page. The card no longer repeats the group name that
+  the header already shows (daemon sections, Jira, About, Guide).
+- Every settings card starts flush: the first row has no divider above it.
+- splitModels is exported and tested (empty, spacing, vendor prefixes).
+
 ## 0.12.1 - 2026-10-29
 
 - 0.12.0 shipped without the settings layout (icon rail, group header and

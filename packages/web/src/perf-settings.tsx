@@ -104,7 +104,7 @@ export function PerformanceSection({ request }: { request: <T>(msg: Request) => 
 
   const d = report?.daemon;
   const row = (id: string, label: string, value: string, hint?: string) => (
-    <div className="flex items-center gap-3 border-t py-2 max-md:min-h-11" data-testid={id}>
+    <div className="flex items-center gap-3 border-t py-2.5 first:border-t-0 first:pt-0 max-md:min-h-11" data-testid={id}>
       <div className="min-w-0 flex-1">
         <span className="block text-sm">{label}</span>
         {hint && <span className="block text-muted-foreground text-xs">{hint}</span>}

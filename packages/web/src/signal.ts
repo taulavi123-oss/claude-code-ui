@@ -1,6 +1,7 @@
 // Signal only (docs/spec.md "Session view UX"): a run of tool cards folds into one line; prompts, text, errors and pending requests stay.
 import { useSyncExternalStore } from "react";
 import type { TimelineItem, ToolCall } from "./store.ts";
+import { diffStats } from "./tools.ts";
 
 /** A folded run of tool items; `items` are what it hides, shown again in place when the row is expanded. */
 export type FoldItem = { kind: "fold"; id: string; calls: ToolCall[]; items: TimelineItem[] };
@@ -14,6 +15,32 @@ export function foldLabel(calls: ToolCall[]) {
   for (const c of calls) counts.set(toolName(c.tool), (counts.get(toolName(c.tool)) ?? 0) + 1);
   const tools = [...counts].sort((a, b) => b[1] - a[1]);
   return [`${calls.length} tool call${calls.length === 1 ? "" : "s"}`, ...tools.map(([t, n]) => `${t} ${n}`)].join(" · ");
+}
+
+const baseName = (path: string) => path.split(/[\\/]/).pop() || path;
+
+/** One edited file of a folded run, its line counts summed over every Edit/Write of that path. */
+export type FoldFile = { path: string; name: string; added: number; removed: number };
+
+/** The files a folded run touched, in first-seen order, at most `limit` (the rest stay behind the row). */
+export function foldFiles(calls: ToolCall[], limit = 6): FoldFile[] {
+  const files: FoldFile[] = [];
+  const at = new Map<string, number>();
+  for (const call of calls) {
+    const path = (call.input as { file_path?: unknown } | undefined)?.file_path;
+    if (typeof path !== "string" || !path) continue;
+    const stats = diffStats(call.tool, call.input);
+    if (!stats) continue;
+    const seen = at.get(path);
+    if (seen !== undefined) {
+      files[seen]!.added += stats.added;
+      files[seen]!.removed += stats.removed;
+      continue;
+    }
+    at.set(path, files.length);
+    files.push({ path, name: baseName(path), added: stats.added, removed: stats.removed });
+  }
+  return files.slice(0, limit);
 }
 
 /** Folds every run of finished-or-running tool calls that is not an error, a denial or waiting for a permission answer. */
