@@ -983,6 +983,11 @@ export function createDaemon(opts: {
       try {
         const saved = new Set(settings.ids());
         projects.seed(listed.filter((s) => saved.has(s.id)));
+        // One-time, under the same guard: a fresh config with nothing to seed
+        // gets the allowlisted roots as projects, so the UI never opens on an
+        // empty list. A project removed later stays removed.
+        if (projects.list(listed).filter((cwd) => allowed(cwd)).length === 0)
+          for (const root of roots) if (allowed(root)) projects.open(root);
       } catch (err) {
         // In memory it holds; the next start seeds again.
         console.error("saving projects failed:", err);
