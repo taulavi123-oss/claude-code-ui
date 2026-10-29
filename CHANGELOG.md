@@ -2,6 +2,11 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.12.1 - 2026-10-29
+
+- 0.12.0 shipped without the settings layout (icon rail, group header and
+  card) because the dialog change was missing from the build. Rebuilt.
+
 ## 0.12.0 - 2026-10-29
 
 - Settings redesign: wider dialog (860px), icon rail, a title and one-line hint
