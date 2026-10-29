@@ -2,6 +2,12 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.15.0 - 2026-10-30
+
+- A fresh config with no project gets the daemon's allowlisted roots as
+  projects once, so the UI no longer opens on an empty list with no obvious
+  next step. A project removed later stays removed.
+
 ## 0.14.0 - 2026-10-30
 
 - Settings › Permissions: session limit. The daemon refuses a new live session
