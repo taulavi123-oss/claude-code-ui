@@ -58,6 +58,28 @@ export function PermissionsSection({ permissions, saving, save, bypassAvailable 
           CLAUDE_UI_ALLOW_BYPASS=1 to vip.env and restart the server.
         </span>
       )}
+      <label className="flex items-center gap-3 border-t pt-3">
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm">Session limit</span>
+          <span className="block text-muted-foreground text-xs">
+            Live sessions allowed at once. A 2 GB container wants 1. 0 means no limit.
+          </span>
+        </span>
+        <input
+          type="number"
+          min={0}
+          max={20}
+          value={permissions.maxSessions}
+          disabled={saving}
+          aria-label="Session limit"
+          data-testid="settings-permissions-max-sessions"
+          className="h-9 w-20 rounded-lg border bg-background px-3 text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11"
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (Number.isInteger(n) && n >= 0 && n <= 20) void save({ permissions: { maxSessions: n } });
+          }}
+        />
+      </label>
       <p className="text-muted-foreground text-xs">
         Applies to new sessions; changing it also updates the sessions that are open.
       </p>

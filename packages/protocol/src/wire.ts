@@ -652,7 +652,7 @@ export type Settings = { orchestration: { enabled: boolean; workerCap: number; /
   /** Model provider: env = whatever the launcher exported (default); subscription = claude login; api = the stored Anthropic-compatible gateway. */
   provider: { mode: "env" | "subscription" | "api"; baseUrl: string; model: string; /** Comma-separated model ids for the picker. */ models: string; contextWindow: number; maxOutputTokens: number };
   /** Default permission policy for new sessions: ask (prompt), auto (bypassPermissions), deny (dontAsk). */
-  permissions: { policy: "ask" | "auto" | "deny" };
+  permissions: { policy: "ask" | "auto" | "deny"; /** Live sessions allowed at once; 0 = no limit. A 2 GB box wants 1. */ maxSessions: number };
   performance: { monitor: boolean };
   /** Ticket tab of the Create worktree modal (GH-447): one Jira connection; `email` for Cloud only; the token is in secrets.json, never here. */
   jira: { url: string; email: string; template: string; /** Ticket filter: the JQL of the Ticket tab's list and text search; "" = my open tickets. */ jql: string };

@@ -8,7 +8,7 @@ const GIT = { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, reposito
 const file = () => join(mkdtempSync(join(tmpdir(), "settings-")), "settings.json");
 
 it("defaults with no file: orchestration off, cap 4, coordinator does not answer permissions (the user opts in)", () => {
-  expect(createSettings({ file: file() }).get()).toEqual({ orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: false, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy: "ask" }, performance: { monitor: true }, jira: { url: "", email: "", template: "{type}/{key}-{summary}", jql: "" }, git: GIT });
+  expect(createSettings({ file: file() }).get()).toEqual({ orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: false, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy: "ask", maxSessions: 0 }, performance: { monitor: true }, jira: { url: "", email: "", template: "{type}/{key}-{summary}", jql: "" }, git: GIT });
 });
 
 it("set persists; a new store (daemon process) reads the same values", () => {

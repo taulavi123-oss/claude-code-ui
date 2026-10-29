@@ -2,6 +2,12 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.14.0 - 2026-10-30
+
+- Settings › Permissions: session limit. The daemon refuses a new live session
+  past the cap (`session_limit`) instead of letting a 2 GB container run out of
+  memory. 0 keeps the previous behaviour.
+
 ## 0.13.0 - 2026-10-29
 
 - Settings › Skills: a Skills center entry that opens the slash-command dialog,
