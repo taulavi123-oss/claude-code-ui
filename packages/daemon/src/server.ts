@@ -31,7 +31,7 @@ import { createPromptQueue } from "./prompt-queue.ts";
 import { CONTINUE_GAP_MS, CONTINUE_PROMPT, createAutoContinue } from "./auto-continue.ts";
 import { listModels, queuedQuery, Session, transcriptModel, type SessionSettings, type Transcript } from "./session.ts";
 import { createTerminals } from "./terminals.ts";
-import { applyStoredProvider, providerHealth } from "./provider.ts";
+import { applyStoredProvider, providerHealth, providerModels } from "./provider.ts";
 import { ConfigError, createConfig, runCli, timed, type CliRunner, type McpRequest, type SkillsRequest } from "./config.ts";
 import { createPlugins, redact, type PluginsRequest } from "./plugins.ts";
 import { searchTranscripts } from "./content-search.ts";
@@ -1869,6 +1869,14 @@ export function createDaemon(opts: {
         case "provider.test": {
           try {
             return reply(await providerHealth(appSettings.get().provider, secrets.anthropicToken()));
+          } catch (err) {
+            const [code, ...rest] = (err as Error).message.split(":");
+            return fail(code || "provider_failed", rest.join(":").trim() || (err as Error).message);
+          }
+        }
+        case "provider.models": {
+          try {
+            return reply(await providerModels(appSettings.get().provider, secrets.anthropicToken()));
           } catch (err) {
             const [code, ...rest] = (err as Error).message.split(":");
             return fail(code || "provider_failed", rest.join(":").trim() || (err as Error).message);

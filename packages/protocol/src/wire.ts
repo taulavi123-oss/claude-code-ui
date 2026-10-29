@@ -127,6 +127,8 @@ export type ClientMessage = { reqId: string; side?: string } & (
   | { type: "provider.token"; token: string | null }
   /** One cheap count_tokens call with the saved provider settings. Reply `{model, latencyMs}`; errors provider_not_configured, provider_auth, provider_unreachable, provider_failed. */
   | { type: "provider.test" }
+  /** Lists the gateway's model ids (GET /v1/models) with the saved provider settings. Reply ProviderModelsResult; errors as provider.test plus provider_empty. */
+  | { type: "provider.models" }
   /** Performance data of this daemon (docs/spec.md "Performance monitor"); reply PerfReport. */
   | { type: "perf.report" }
   /** Empties the performance store; reply {}. */
@@ -459,6 +461,8 @@ export type JiraTicket = { key: string; type: string; summary: string; status: s
 export type JiraSearchResult = { tickets: JiraTicket[] };
 /** A successful provider.test: the gateway's count_tokens reply, no generation and no key. */
 export type ProviderTestResult = { model: string; latencyMs: number };
+/** A successful provider.models: model ids the gateway reports. */
+export type ProviderModelsResult = { models: string[] };
 /** Why a worktree cannot be removed now. */
 export type WorktreeBlock = "locked" | "symlink" | "outside_roots" | "sessions_running" | "removing" | "contains_worktree";
 /**

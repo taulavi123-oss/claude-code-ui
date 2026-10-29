@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { apiModeEnabled, applyStoredProvider, configuredModels, providerConfigError, providerEnv, resolvedProvider, withoutApiKeys } from "../src/provider.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { apiModeEnabled, applyStoredProvider, configuredModels, providerConfigError, providerEnv, providerModels, resolvedProvider, withoutApiKeys } from "../src/provider.ts";
 
 const base = { ANTHROPIC_BASE_URL: "https://gateway.example", ANTHROPIC_AUTH_TOKEN: "secret-token", ANTHROPIC_MODEL: "vendor/model" };
 
@@ -74,5 +74,23 @@ describe("stored provider", () => {
       process.env.ANTHROPIC_AUTH_TOKEN = "env-key";
       expect(resolvedProvider({ ...provider, baseUrl: "", model: "" })).toEqual({ mode: "api", baseUrl: "https://env.example", model: "env/model", key: "env-key" });
     });
+  });
+});
+
+describe("provider models", () => {
+  const settings = { mode: "api" as const, baseUrl: "https://gateway.example", model: "m", models: "", contextWindow: 1000000, maxOutputTokens: 64000 };
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("lists the ids the gateway reports in data[]", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ data: [{ id: "vendor/one" }, { id: "vendor/two" }] }), { status: 200 })));
+    await expect(providerModels(settings, "k")).resolves.toEqual({ models: ["vendor/one", "vendor/two"] });
+  });
+
+  it("reports auth and an empty list as errors", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 401 })));
+    await expect(providerModels(settings, "k")).rejects.toThrow("provider_auth");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 })));
+    await expect(providerModels(settings, "k")).rejects.toThrow("provider_empty");
   });
 });

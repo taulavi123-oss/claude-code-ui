@@ -2,6 +2,16 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.11.0 - 2026-10-29
+
+- Settings › Provider: the model list is a row editor with Add model and a
+  delete button per id.
+- "Fetch available models" calls the gateway's GET /v1/models and opens a
+  search box over the result instead of dumping every id into the saved list
+  (the gateway reports ~1970 ids).
+- New provider.models request; errors: provider_not_configured, provider_auth,
+  provider_unreachable, provider_failed, provider_empty.
+
 ## 0.10.1 - 2026-10-29
 
 - Settings › Permissions warns when Auto accept is saved but the daemon runs
