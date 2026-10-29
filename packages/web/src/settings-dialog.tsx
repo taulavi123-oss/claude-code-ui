@@ -25,11 +25,58 @@ import { IN_APP_EVENT, loadInApp, saveInApp } from "./notify.ts";
 import { useKeymap } from "./keymap.ts";
 import { keyText } from "./shortcuts.ts";
 import { KeyTipsRow } from "./key-tip.tsx";
-import { ChevronLeftIcon } from "lucide-react";
+import {
+  ActivityIcon, BellIcon, ChevronLeftIcon, CompassIcon, CpuIcon, GaugeIcon,
+  GitBranchIcon, GitCompareIcon, InfoIcon, KeyboardIcon, MonitorIcon,
+  PanelLeftIcon, PlugIcon, SendIcon, ShieldCheckIcon, SquareStackIcon,
+  TerminalIcon, TicketIcon, WorkflowIcon, type LucideIcon,
+} from "lucide-react";
 import { ListSetting } from "./list-setting.tsx";
 import { JiraSection } from "./jira-settings.tsx";
 import { PermissionsSection } from "./permissions-settings.tsx";
 import { ProviderSection } from "./provider-settings.tsx";
+
+const GROUP_ICONS: Record<string, LucideIcon> = {
+  timeline: ActivityIcon,
+  sending: SendIcon,
+  notifications: BellIcon,
+  screen: MonitorIcon,
+  changes: GitCompareIcon,
+  sidebar: PanelLeftIcon,
+  terminal: TerminalIcon,
+  tabs: SquareStackIcon,
+  keyboard: KeyboardIcon,
+  guide: CompassIcon,
+  orchestration: WorkflowIcon,
+  usageLimit: GaugeIcon,
+  performance: CpuIcon,
+  git: GitBranchIcon,
+  provider: PlugIcon,
+  permissions: ShieldCheckIcon,
+  jira: TicketIcon,
+  about: InfoIcon,
+};
+
+const GROUP_HINTS: Record<string, string> = {
+  timeline: "How tool calls are folded into one line in a session.",
+  sending: "What Enter does and how a draft is sent.",
+  notifications: "Desktop and in-app notifications for this browser.",
+  screen: "Density and motion choices for this browser.",
+  changes: "How edited files are shown and reviewed.",
+  sidebar: "What the project sidebar lists and how it is laid out.",
+  terminal: "The terminal dock and its shell.",
+  tabs: "Tab grouping and when old tabs close.",
+  keyboard: "See and rebind every shortcut.",
+  guide: "Replay the guided tour.",
+  orchestration: "Let sessions start and supervise worker sessions.",
+  usageLimit: "What happens when the plan's usage limit resets.",
+  performance: "Measure the daemon and see memory, handlers and spans.",
+  git: "Repository discovery and which repos the Git panel shows.",
+  provider: "Where model requests go: environment, subscription or a custom gateway.",
+  permissions: "Default permission policy for new sessions.",
+  jira: "Ticket tab of the Create worktree dialog.",
+  about: "Versions and build information.",
+};
 
 const GROUP_KEY = "claude-ui.settingsGroup";
 const loadGroup = () => {
@@ -652,32 +699,44 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
   return (
     <ConfigDialog title="Settings" open={open} onClose={onClose} testId="settings-dialog" wide>
       {error && <Banner kind="error">{error}</Banner>}
-      <div className="flex min-h-0 gap-4 md:h-[380px] max-md:flex-1" data-testid="settings-layout">
-        <div role="tablist" aria-label="Settings groups" aria-orientation="vertical" onKeyDown={onListKey} className={`flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto max-md:w-full ${drilled ? "max-md:hidden" : ""}`} data-testid="settings-groups">
-          {groups.map((g) => (
-            <button
-              key={g.id}
-              ref={(el) => void (el ? tabRefs.current.set(g.id, el) : tabRefs.current.delete(g.id))}
-              type="button"
-              role="tab"
-              id={`settings-tab-${g.id}`}
-              aria-selected={g.id === selected.id}
-              aria-controls="settings-panel"
-              tabIndex={g.id === selected.id ? 0 : -1}
-              onClick={() => drillIn(g.id)}
-              className={`flex h-8 items-center rounded-md px-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11 ${g.id === selected.id ? "bg-accent text-foreground md:font-medium" : "text-muted-foreground hover:bg-accent/60"}`}
-              data-testid={`settings-group-${g.id}`}
-            >
-              {g.title}
-            </button>
-          ))}
+      <div className="flex min-h-0 gap-0 md:h-[560px] max-md:flex-1" data-testid="settings-layout">
+        <div role="tablist" aria-label="Settings groups" aria-orientation="vertical" onKeyDown={onListKey} className={`flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r pr-2 max-md:w-full max-md:border-r-0 ${drilled ? "max-md:hidden" : ""}`} data-testid="settings-groups">
+          {groups.map((g) => {
+            const Icon = GROUP_ICONS[g.id] ?? InfoIcon;
+            return (
+              <button
+                key={g.id}
+                ref={(el) => void (el ? tabRefs.current.set(g.id, el) : tabRefs.current.delete(g.id))}
+                type="button"
+                role="tab"
+                id={`settings-tab-${g.id}`}
+                aria-selected={g.id === selected.id}
+                aria-controls="settings-panel"
+                tabIndex={g.id === selected.id ? 0 : -1}
+                onClick={() => drillIn(g.id)}
+                className={`flex h-9 items-center gap-2.5 rounded-lg px-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11 ${g.id === selected.id ? "bg-accent text-foreground md:font-medium" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+                data-testid={`settings-group-${g.id}`}
+              >
+                <Icon className="size-4 shrink-0" aria-hidden />
+                <span className="truncate">{g.title}</span>
+              </button>
+            );
+          })}
         </div>
-        <div role="tabpanel" id="settings-panel" aria-labelledby={`settings-tab-${selected.id}`} className={`flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto pr-3 pl-0.5 ${drilled ? "" : "max-md:hidden"}`} data-testid="settings-panel">
+        <div role="tabpanel" id="settings-panel" aria-labelledby={`settings-tab-${selected.id}`} className={`flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-5 ${drilled ? "" : "max-md:hidden"}`} data-testid="settings-panel">
           <button ref={backRef} type="button" onClick={back} className="flex h-11 items-center gap-1 self-start rounded-md pr-3 text-muted-foreground text-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring md:hidden" data-testid="settings-back">
             <ChevronLeftIcon className="size-4" />
             Settings
           </button>
-          {selected.body}
+          <header className="flex flex-col gap-1 pt-1">
+            <h2 className="font-semibold text-lg tracking-tight">{selected.title}</h2>
+            {GROUP_HINTS[selected.id] && (
+              <p className="text-muted-foreground text-xs leading-relaxed">{GROUP_HINTS[selected.id]}</p>
+            )}
+          </header>
+          <div className="min-w-0 rounded-xl border bg-card/40 p-4" data-testid="settings-section-card">
+            {selected.body}
+          </div>
         </div>
       </div>
     </ConfigDialog>
