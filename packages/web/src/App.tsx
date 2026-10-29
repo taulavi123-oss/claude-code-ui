@@ -186,6 +186,8 @@ const saveFlag = (key: string, on: boolean) => {
 };
 const TERMINAL_HEIGHT_KEY = "claude-ui.terminalHeight";
 const SIDEBAR_WIDTH_KEY = "claude-ui.sidebarWidth";
+/** Whether the wide-screen sidebar shows; the Home button and Settings both write it. */
+const SIDEBAR_OPEN_KEY = "claude-ui.sidebarOpen";
 /** Least time between two automatic retries of a failed older-page cursor (n9: a burst of scroll events sends one request). */
 const PAGE_RETRY_MS = 3000;
 const loadNumber = (key: string, fallback: number) => {
@@ -355,7 +357,24 @@ export function App() {
   pinnedRef.current = pinnedSet;
   const [resumeSearch, setResumeSearch] = useState<{ text: string; seq: number }>();
   // Wide screens: the Home button shows or hides the sessions sidebar.
-  const [sidebar, setSidebar] = useState(true);
+  const [sidebar, setSidebarState] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_OPEN_KEY) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const setSidebar = (next: boolean | ((v: boolean) => boolean)) => {
+    setSidebarState((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      try {
+        localStorage.setItem(SIDEBAR_OPEN_KEY, value ? "1" : "0");
+      } catch {
+        // Private mode: the choice lasts for this tab.
+      }
+      return value;
+    });
+  };
   // Wide screens: the sidebar's width, dragged on its edge; kept per browser. The narrow-screen drawer is min(85vw, 360px).
   const [sidebarWidth, setSidebarWidth] = useState(() => loadNumber(SIDEBAR_WIDTH_KEY, 288));
   useEffect(() => {
@@ -3140,7 +3159,7 @@ export function App() {
           onClose={() => setPlugins({ ...plugins, open: false })}
         />
       )}
-      <SettingsDialog push={{ on: pushOn, supported: pushSupported(), busy: pushBusy, error: pushError, toggle: () => void togglePush() }} open={settingsOpen} changed={settingsChanged} request={(m) => client.current!.request(m)} onClose={() => setSettingsOpen(false)} tabGrouping={grouping} onTabGrouping={changeGrouping} onRestartGuide={() => startGuide("settings")} tabCompact={compact} onTabCompact={changeCompact} tabAutoClose={autoClose} onTabAutoClose={changeAutoClose} onShortcuts={() => (setSettingsOpen(false), setShortcutsOpen(true))} />
+      <SettingsDialog push={{ on: pushOn, supported: pushSupported(), busy: pushBusy, error: pushError, toggle: () => void togglePush() }} open={settingsOpen} changed={settingsChanged} request={(m) => client.current!.request(m)} onClose={() => setSettingsOpen(false)} tabGrouping={grouping} onTabGrouping={changeGrouping} onRestartGuide={() => startGuide("settings")} tabCompact={compact} onTabCompact={changeCompact} tabAutoClose={autoClose} onTabAutoClose={changeAutoClose} onShortcuts={() => (setSettingsOpen(false), setShortcutsOpen(true))} onSkills={project ? () => (setSettingsOpen(false), openSkills()) : undefined} />
       {shown && client.current && (
         <ViewerDialog
           target={viewer && !isFileTarget(viewer.target) ? viewer.target : undefined}

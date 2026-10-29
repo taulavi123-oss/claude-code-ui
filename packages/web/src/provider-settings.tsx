@@ -20,7 +20,7 @@ type Props = {
 
 const INPUT = "h-9 w-full rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11";
 const ROW = "flex flex-col gap-1.5 border-t py-3 first:border-t-0 first:pt-0";
-const splitModels = (value: string) => value.split(",").map((m) => m.trim()).filter(Boolean);
+export const splitModels = (value: string) => value.split(",").map((m) => m.trim()).filter(Boolean);
 
 export function ProviderSection({ provider, keySet, saving, save, request, onResult, onError }: Props) {
   const [draft, setDraft] = useState<Partial<Record<"baseUrl" | "model" | "models" | "contextWindow" | "maxOutputTokens", string>>>({});
