@@ -3,7 +3,7 @@
 import { createJsonFile } from "./json-file.ts";
 import { AUTO_REPOSITORY_DETECTION, DEFAULT_BRANCH_TEMPLATE, PARENT_FOLDER_MODES, WORKER_MODES, type Settings, type SettingsPatch } from "@claude-ui/protocol";
 
-export const DEFAULTS: Settings = { orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: false, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy: "ask" }, performance: { monitor: true }, jira: { url: "", email: "", template: DEFAULT_BRANCH_TEMPLATE, jql: "" }, git: { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, repositoryScanIgnoredFolders: ["node_modules"], scanRepositories: [], ignoredRepositories: [], detectSubmodules: true, detectSubmodulesLimit: 10, ignoreSubmodules: false, openRepositoryInParentFolders: "always" } };
+export const DEFAULTS: Settings = { orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: false, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy: "ask", maxSessions: 0 }, performance: { monitor: true }, jira: { url: "", email: "", template: DEFAULT_BRANCH_TEMPLATE, jql: "" }, git: { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, repositoryScanIgnoredFolders: ["node_modules"], scanRepositories: [], ignoredRepositories: [], detectSubmodules: true, detectSubmodulesLimit: 10, ignoreSubmodules: false, openRepositoryInParentFolders: "always" } };
 
 type Check = { valid: (v: unknown) => boolean; label: string; rule: string };
 const jiraUrl = (v: unknown) => {
@@ -46,6 +46,7 @@ const CHECKS: { [S in keyof Settings]: { [K in keyof Settings[S]]: Check } } = {
   },
   permissions: {
     policy: { valid: (v) => v === "ask" || v === "auto" || v === "deny", label: "Permission mode", rule: "ask, auto or deny" },
+    maxSessions: intIn("Session limit", 0, 20),
   },
   performance: { monitor: bool("Performance monitor") },
   jira: {

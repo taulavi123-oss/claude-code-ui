@@ -1553,6 +1553,13 @@ export function createDaemon(opts: {
           await modelList().catch(() => {});
           // A removal may have started during the await: no live session in a deleted directory.
           if (isRemoving(cwd) || !existsSync(cwd)) return fail("worktree_removing", "This worktree is being removed");
+          // A 2 GB container cannot hold two live sessions; the cap keeps a
+          // second tab from pushing the box into the OOM killer.
+          const cap = appSettings.get().permissions.maxSessions;
+          if (cap > 0) {
+            const live = [...sessions.values()].filter((session) => session.info().state === "running").length;
+            if (live >= cap) return fail("session_limit", `The session limit is ${cap} (Settings > Permissions). Close a session first.`);
+          }
           // The draft token of the new-session tab's uploads: the session gets their id, and with it their folder (one claim per token).
           const claimed = typeof msg.draft === "string" ? uploads.claim(msg.draft) : undefined;
           if (msg.draft !== undefined && !claimed) console.log("session.create: draft uploads not claimed");
