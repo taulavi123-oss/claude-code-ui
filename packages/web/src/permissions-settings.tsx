@@ -2,7 +2,6 @@
 // ask = Claude Code prompts; auto = bypassPermissions (no prompts); deny = dontAsk
 // (refuse anything that would need a prompt). Existing sessions keep their mode.
 import type { Settings, SettingsPatch } from "@claude-ui/protocol";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Props = {
   permissions: Settings["permissions"];
@@ -19,41 +18,50 @@ const LABELS: Record<Settings["permissions"]["policy"], string> = {
 };
 
 export function PermissionsSection({ permissions, saving, save, bypassAvailable }: Props) {
+  const options: { value: Settings["permissions"]["policy"]; title: string; hint: string }[] = [
+    { value: "ask", title: "Ask", hint: "Claude prompts before it edits files or runs commands." },
+    {
+      value: "auto",
+      title: "Auto accept",
+      hint: bypassAvailable === false
+        ? "Bypass is off on this daemon, so edits are accepted but commands still ask."
+        : "No prompts: edits and commands run as bypassPermissions inside this container.",
+    },
+    { value: "deny", title: "Deny", hint: "Anything that would need a prompt is refused (dontAsk)." },
+  ];
+
   return (
-    <section className="flex flex-col gap-2" data-testid="settings-permissions">
-      <p className="text-sm text-muted-foreground">
-        Default for new sessions. Ask prompts before edits and commands. Auto accept runs edits and commands without asking
-        (bypassPermissions) — only inside this container. Deny refuses anything that would need a prompt (dontAsk).
-      </p>
-      <label className="flex flex-col gap-1 border-t py-2">
-        <span className="text-sm">Permission mode</span>
-        <Select
-          value={permissions.policy}
-          onValueChange={(v) => v && void save({ permissions: { policy: v as Settings["permissions"]["policy"] } })}
-        >
-          <SelectTrigger aria-label="Permission mode" data-testid="settings-permissions-policy" className="w-full max-md:h-11" disabled={saving}>
-            <SelectValue>{(v: Settings["permissions"]["policy"]) => LABELS[v]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ask">Ask</SelectItem>
-            <SelectItem value="auto">Auto accept</SelectItem>
-            <SelectItem value="deny">Deny</SelectItem>
-          </SelectContent>
-        </Select>
-        {permissions.policy === "auto" && bypassAvailable === false && (
-          <span className="text-xs text-destructive" data-testid="settings-permissions-bypass-off">
-            The daemon runs without --allow-bypass, so Auto accept falls back to accepting edits only. Add
-            CLAUDE_UI_ALLOW_BYPASS=1 to vip.env and restart the server.
-          </span>
-        )}
-        <span className="text-muted-foreground text-xs">
-          {permissions.policy === "ask"
-            ? "Claude asks before it edits files or runs commands."
-            : permissions.policy === "auto"
-              ? "New sessions start in bypassPermissions: no prompts. The daemon needs --allow-bypass."
-              : "New sessions start in dontAsk: anything that would prompt is refused."}
+    <section className="flex flex-col gap-3" data-testid="settings-permissions">
+      <div role="radiogroup" aria-label="Permission mode" className="flex flex-col gap-2" data-testid="settings-permissions-policy">
+        {options.map((option) => {
+          const active = permissions.policy === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              disabled={saving}
+              onClick={() => option.value !== permissions.policy && void save({ permissions: { policy: option.value } })}
+              className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-11 ${active ? "border-primary/60 bg-accent" : "hover:bg-accent/50"}`}
+              data-testid={`settings-permissions-${option.value}`}
+            >
+              <span className={`text-sm ${active ? "font-medium" : ""}`}>{option.title}</span>
+              <span className="text-muted-foreground text-xs">{option.hint}</span>
+            </button>
+          );
+        })}
+      </div>
+      {permissions.policy === "auto" && bypassAvailable === false && (
+        <span className="text-xs text-destructive" data-testid="settings-permissions-bypass-off">
+          The daemon runs without --allow-bypass, so Auto accept falls back to accepting edits only. Add
+          CLAUDE_UI_ALLOW_BYPASS=1 to vip.env and restart the server.
         </span>
-      </label>
+      )}
+      <p className="text-muted-foreground text-xs">
+        Applies to new sessions; changing it also updates the sessions that are open.
+      </p>
     </section>
   );
 }
+

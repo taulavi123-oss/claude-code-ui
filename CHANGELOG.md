@@ -2,6 +2,15 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.12.0 - 2026-10-29
+
+- Settings redesign: wider dialog (860px), icon rail, a title and one-line hint
+  per group, and the section body in a card.
+- Permissions is three radio cards (Ask / Auto accept / Deny) with a live hint
+  instead of a select.
+- Provider: model rows labelled Model ID, larger inputs, and the fetched-model
+  search sits in its own panel.
+
 ## 0.11.0 - 2026-10-29
 
 - Settings › Provider: the model list is a row editor with Add model and a

@@ -17,7 +17,7 @@ export const shownPrompt = () => {
 };
 
 /** `busy`: a write runs, Esc and Close do nothing (the extension's dialog stays open while adding or removing). */
-export function ConfigDialog({ title, open, onClose, busy, footer, children, testId }: { title: string; open: boolean; onClose: () => void; busy?: boolean; footer?: ReactNode; children: ReactNode; testId?: string }) {
+export function ConfigDialog({ title, open, onClose, busy, footer, children, testId, wide }: { title: string; open: boolean; onClose: () => void; busy?: boolean; footer?: ReactNode; children: ReactNode; testId?: string; wide?: boolean }) {
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && !busy && onClose()}>
       <Dialog.Portal>
@@ -25,7 +25,7 @@ export function ConfigDialog({ title, open, onClose, busy, footer, children, tes
         <Dialog.Popup
           finalFocus={() => shownPrompt() ?? true}
           onKeyDown={trapTab}
-          className="-translate-x-1/2 fixed top-[max(48px,calc((100dvh-560px)/2))] left-1/2 z-50 flex max-h-[min(100dvh-96px,560px)] w-[min(100vw-24px,640px)] flex-col rounded-xl bg-card text-foreground shadow-floating outline-none max-sm:top-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-full max-sm:rounded-none"
+          className={`-translate-x-1/2 fixed left-1/2 z-50 flex flex-col rounded-xl bg-card text-foreground shadow-floating outline-none max-sm:top-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-full max-sm:rounded-none ${wide ? "top-[max(32px,calc((100dvh-640px)/2))] max-h-[min(100dvh-64px,640px)] w-[min(100vw-24px,900px)]" : "top-[max(48px,calc((100dvh-560px)/2))] max-h-[min(100dvh-96px,560px)] w-[min(100vw-24px,640px)]"}`}
           data-testid={testId}
           // App shortcuts and Esc (stop turn) skip while an aria-modal dialog shows; Base UI does not set it.
           aria-modal="true"
