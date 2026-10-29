@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.10.1 - 2026-10-29
+
+- Settings › Permissions warns when Auto accept is saved but the daemon runs
+  without --allow-bypass: the session falls back to acceptEdits and commands
+  still ask for approval. The warning names the env variable to set.
+- Changing the policy applies to sessions that are already open, not only to
+  new ones.
+
 ## 0.10.0 - 2026-10-28
 
 - Settings › Permissions: the default permission policy for new sessions.

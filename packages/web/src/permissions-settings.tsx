@@ -8,6 +8,8 @@ type Props = {
   permissions: Settings["permissions"];
   saving: boolean;
   save: (patch: SettingsPatch, field?: string) => Promise<void>;
+  /** False when the daemon was started without --allow-bypass. */
+  bypassAvailable?: boolean;
 };
 
 const LABELS: Record<Settings["permissions"]["policy"], string> = {
@@ -16,7 +18,7 @@ const LABELS: Record<Settings["permissions"]["policy"], string> = {
   deny: "Deny",
 };
 
-export function PermissionsSection({ permissions, saving, save }: Props) {
+export function PermissionsSection({ permissions, saving, save, bypassAvailable }: Props) {
   return (
     <section className="flex flex-col gap-2" data-testid="settings-permissions">
       <p className="text-sm text-muted-foreground">
@@ -38,6 +40,12 @@ export function PermissionsSection({ permissions, saving, save }: Props) {
             <SelectItem value="deny">Deny</SelectItem>
           </SelectContent>
         </Select>
+        {permissions.policy === "auto" && bypassAvailable === false && (
+          <span className="text-xs text-destructive" data-testid="settings-permissions-bypass-off">
+            The daemon runs without --allow-bypass, so Auto accept falls back to accepting edits only. Add
+            CLAUDE_UI_ALLOW_BYPASS=1 to vip.env and restart the server.
+          </span>
+        )}
         <span className="text-muted-foreground text-xs">
           {permissions.policy === "ask"
             ? "Claude asks before it edits files or runs commands."

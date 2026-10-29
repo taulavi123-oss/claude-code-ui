@@ -398,7 +398,7 @@ export function createDaemon(opts: {
   const jira = createJira({ config: () => appSettings.get().jira, token: () => secrets.jiraToken(), ...(opts.jiraFetch && { fetch: opts.jiraFetch }) });
   /** `settings.get` / `settings.set` / `jira.token` reply: the settings, the daemon, whether a Jira or provider token is saved (never the token). */
   const providerKeySet = () => !!secrets.anthropicToken() || !!process.env.ANTHROPIC_AUTH_TOKEN || !!process.env.ANTHROPIC_API_KEY;
-  const settingsReply = (settings = appSettings.get()) => ({ settings, daemon: daemonInfo(), jiraToken: !!secrets.jiraToken(), providerKeySet: providerKeySet() });
+  const settingsReply = (settings = appSettings.get()) => ({ settings, daemon: daemonInfo(), jiraToken: !!secrets.jiraToken(), providerKeySet: providerKeySet(), permissionModes: permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto("default") }) });
   // The monitor follows the `performance.monitor` setting: on start, on settings.set, and on its 10 s tick (another daemon's change to off).
   const perfMon = opts.perf ?? createPerf({ version: opts.buildInfo?.version, poll: () => appSettings.get().performance.monitor });
   setPerf(perfMon);
@@ -1891,6 +1891,19 @@ export function createDaemon(opts: {
             perfMon.setEnabled(settings.performance.monitor);
             applyStoredProvider(settings.provider, secrets.anthropicToken());
             resetModelList();
+            if (msg.patch.permissions) {
+              // The picker in an open session keeps its own mode; a policy change
+              // is meant to apply now, not only to the next session.
+              const modes = permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto("default") });
+              const target = settings.permissions.policy === "ask" ? "default" : modeForPolicy(settings.permissions.policy, modes);
+              if (target) for (const session of sessions.values()) {
+                try {
+                  if (session.info().permissionModes.includes(target)) await session.setPermissionMode(target);
+                } catch {
+                  // A closed session or a mode its model does not offer: leave it.
+                }
+              }
+            }
             broadcast({ type: "settings_changed", settings, jiraToken: !!secrets.jiraToken(), providerKeySet: providerKeySet() });
             return reply(settingsReply(settings));
           } catch (err) {

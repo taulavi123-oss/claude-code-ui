@@ -231,6 +231,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
   const [saving, setSaving] = useState(false);
   const [jiraToken, setJiraToken] = useState(false);
   const [providerKeySet, setProviderKeySet] = useState(false);
+  const [permissionModes, setPermissionModes] = useState<string[]>();
   // "Show only active sessions": the sidebar's own per-browser setting (its options menu writes it too).
   const [onlyActive, setOnlyActive] = useState(() => loadSidebarView().onlyActive);
   const [layout, setLayout] = useState(() => loadSidebarView().layout);
@@ -261,7 +262,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
     if (!open) return;
     let live = true;
     ask.current<SettingsResult>({ type: "settings.get" }).then(
-      (r) => live && (setSettings(r.settings), setDaemon(r.daemon), setJiraToken(!!r.jiraToken), setProviderKeySet(!!r.providerKeySet), setError(undefined), setDraft({})),
+      (r) => live && (setSettings(r.settings), setDaemon(r.daemon), setJiraToken(!!r.jiraToken), setProviderKeySet(!!r.providerKeySet), setPermissionModes(r.permissionModes), setError(undefined), setDraft({})),
       (e: Error) => live && setError(e.message),
     );
     return () => void (live = false);
@@ -275,6 +276,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
       setDaemon(r.daemon);
       setJiraToken(!!r.jiraToken);
       setProviderKeySet(!!r.providerKeySet);
+      setPermissionModes(r.permissionModes);
       setError(undefined);
       if (field) setDraft(({ [field]: _, ...rest }) => rest);
     } catch (e) {
@@ -612,7 +614,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
       : []),
     // Permission policy for new sessions; an older daemon has no `permissions`.
     ...(settings?.permissions
-      ? [{ id: "permissions", title: "Permissions", body: <PermissionsSection permissions={settings.permissions} saving={saving} save={save} /> }]
+      ? [{ id: "permissions", title: "Permissions", body: <PermissionsSection permissions={settings.permissions} saving={saving} save={save} bypassAvailable={permissionModes?.includes("bypassPermissions")} /> }]
       : []),
     // GH-447: an older daemon has no `jira` settings: no group.
     ...(settings?.jira
