@@ -650,7 +650,7 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
   };
 
   return (
-    <ConfigDialog title="Settings" open={open} onClose={onClose} testId="settings-dialog">
+    <ConfigDialog title="Settings" open={open} onClose={onClose} testId="settings-dialog" wide>
       {error && <Banner kind="error">{error}</Banner>}
       <div className="flex min-h-0 gap-4 md:h-[380px] max-md:flex-1" data-testid="settings-layout">
         <div role="tablist" aria-label="Settings groups" aria-orientation="vertical" onKeyDown={onListKey} className={`flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto max-md:w-full ${drilled ? "max-md:hidden" : ""}`} data-testid="settings-groups">

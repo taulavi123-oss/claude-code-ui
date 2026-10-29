@@ -18,8 +18,8 @@ type Props = {
   onError: (message: string) => void;
 };
 
-const INPUT = "h-8 w-full rounded-md border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11";
-const ROW = "flex flex-col gap-1 border-t py-2";
+const INPUT = "h-9 w-full rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:h-11";
+const ROW = "flex flex-col gap-1.5 border-t py-3 first:border-t-0 first:pt-0";
 const splitModels = (value: string) => value.split(",").map((m) => m.trim()).filter(Boolean);
 
 export function ProviderSection({ provider, keySet, saving, save, request, onResult, onError }: Props) {
@@ -146,10 +146,7 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
   const matches = (query ? available.filter((id) => id.toLowerCase().includes(query)) : []).slice(0, 20);
 
   return (
-    <section aria-labelledby="settings-provider" className="flex flex-col" data-testid="settings-provider">
-      <h3 id="settings-provider" className="pb-1 font-medium text-[13px] text-muted-foreground">
-        Provider
-      </h3>
+    <section aria-label="Provider settings" className="flex flex-col" data-testid="settings-provider">
       <div className={ROW}>
         <span className="text-sm">Mode</span>
         <Select value={provider.mode} onValueChange={(v) => v && void save({ provider: { mode: v as Settings["provider"]["mode"] } })}>
@@ -172,7 +169,10 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
           {field("model", "Default model", "The model id sent to the gateway, including any vendor prefix.", "vendor/model")}
           <div className={ROW} data-testid="settings-provider-models">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm">Models</span>
+              <div className="flex flex-col">
+                <span className="text-sm">Models</span>
+                <span className="text-muted-foreground text-xs">Ids offered in the model picker. Leave empty to use only the default.</span>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -216,6 +216,12 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
                   ))}
                 {query && !matches.length && <span className="text-xs text-muted-foreground">No model id matches.</span>}
                 {!query && <span className="text-muted-foreground text-xs">Type part of a model id to filter.</span>}
+              </div>
+            )}
+            {models.length > 0 && (
+              <div className="grid grid-cols-[1fr_auto] gap-2 pl-1 text-muted-foreground text-xs">
+                <span>Model ID</span>
+                <span className="w-9" />
               </div>
             )}
             {models.map((id, index) => (
