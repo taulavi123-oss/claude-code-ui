@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { ListSetting } from "./list-setting.tsx";
 import { JiraSection } from "./jira-settings.tsx";
+import { CHAT_THEMES, saveChatTheme, useChatTheme } from "./chat-theme.ts";
+import { savePetEnabled, usePetEnabled } from "./pet-setting.ts";
 import { PermissionsSection } from "./permissions-settings.tsx";
 import { ProviderSection } from "./provider-settings.tsx";
 
@@ -182,10 +184,7 @@ function ScreenSection() {
   const s = useKeepAwakeSetting();
   const supported = wakeLockSupported();
   return (
-    <section aria-labelledby="settings-screen" className="flex flex-col" data-testid="settings-screen">
-      <h3 id="settings-screen" className="pb-1 font-medium text-[13px] text-muted-foreground">
-        Screen
-      </h3>
+    <section aria-label="Screen" className="flex flex-col" data-testid="settings-screen">
       <div className="flex items-center gap-3 border-t py-2 max-md:min-h-11">
         <div className="min-w-0 flex-1">
           <span className="block text-sm">Keep screen awake</span>
@@ -206,7 +205,60 @@ function ScreenSection() {
         </div>
         <Switch on={s.onlyRunning} label="Only while a session is running" held={!s.on || !supported} onToggle={(onlyRunning) => saveKeepAwake({ ...s, onlyRunning })} title="Only while a session is running" describedBy="settings-awake-running-hint" testId="settings-keep-awake-running" />
       </div>
+      <ChatThemeRows />
     </section>
+  );
+}
+
+/** Chat theme and pet: decoration for this browser, nothing reaches the daemon. */
+function ChatThemeRows() {
+  const theme = useChatTheme();
+  const pet = usePetEnabled();
+  return (
+    <>
+      <div className="flex flex-col gap-2 border-t py-2">
+        <div className="min-w-0">
+          <span className="block text-sm">Chat theme</span>
+          <span id="settings-chat-theme-hint" className="block text-muted-foreground text-xs">
+            An ASCII wallpaper behind the conversation, also set with /theme and a name. Kept in this browser.
+          </span>
+        </div>
+        <div role="radiogroup" aria-label="Chat theme" aria-describedby="settings-chat-theme-hint" className="grid grid-cols-3 gap-2 max-md:grid-cols-2" data-testid="settings-chat-theme">
+          {CHAT_THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="radio"
+              aria-checked={theme === t.id}
+              onClick={() => saveChatTheme(t.id)}
+              className={`flex flex-col gap-1 rounded-lg border p-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-11 ${theme === t.id ? "border-primary/60 bg-accent" : "hover:bg-accent/50"}`}
+              data-testid={`settings-chat-theme-${t.id}`}
+            >
+              <span
+                aria-hidden
+                className="h-8 w-full rounded"
+                style={{
+                  background:
+                    t.id === "none"
+                      ? "repeating-linear-gradient(45deg,transparent,transparent 4px,currentColor 4px,currentColor 5px)"
+                      : `linear-gradient(135deg, ${t.stops[0] ?? "#111"}, ${t.stops.at(-1) ?? "#333"})`,
+                }}
+              />
+              <span className={`text-xs ${theme === t.id ? "font-medium" : ""}`}>{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-3 border-t py-2 max-md:min-h-11">
+        <div className="min-w-0 flex-1">
+          <span className="block text-sm">Claude pet</span>
+          <span id="settings-pet-hint" className="block text-muted-foreground text-xs">
+            A small ASCII Claude in the corner of the conversation. It blinks, and looks busy while a turn runs.
+          </span>
+        </div>
+        <Switch on={pet} label="Claude pet" held={false} onToggle={savePetEnabled} title="Claude pet" describedBy="settings-pet-hint" testId="settings-pet" />
+      </div>
+    </>
   );
 }
 
