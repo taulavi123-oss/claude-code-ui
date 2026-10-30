@@ -2480,11 +2480,6 @@ export function App() {
               {layout.side === "left" ? <PanelLeftIcon /> : <PanelRightIcon />}
             </IconButton>
           )}
-          {panelHost && (
-            <IconButton className={`max-lg:hidden ${QUIET_PRESSED}`} label={withKey("Toggle terminal", specOf("terminal.toggle"))} pressed={inSight("terminal")} onClick={toggleTerminal} testId="terminal-toggle-titlebar" command="terminal.toggle">
-              <SquareTerminalIcon />
-            </IconButton>
-          )}
         </div>
       </header>
       <DeleteDialog title={deleting && (list.find((s) => s.id === deleting)?.title ?? "Untitled")} onConfirm={() => deleteSession(deleting!)} onCancel={() => setDeleting(undefined)} />

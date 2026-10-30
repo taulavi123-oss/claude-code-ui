@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.16.0 - 2026-10-30
+
+- The terminal dock is gone from the UI: no titlebar terminal button and no
+  Settings › Terminal group. Ctrl+` and the palette's "New terminal" still
+  open it for anyone who wants it.
+- Settings › Skills entry, sidebar state memory, edited-file chips and the
+  session limit from 0.13–0.15 stay.
+
 ## 0.15.0 - 2026-10-30
 
 - A fresh config with no project gets the daemon's allowlisted roots as
