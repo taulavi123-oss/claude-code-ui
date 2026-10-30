@@ -2,6 +2,19 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.17.0 - 2026-10-30
+
+- Chat themes: nine live ASCII wallpapers behind the conversation, ported from
+  Claudie (MIT, (c) 2026 Nguyen Van Nam and Luis Roberto for Claudinho):
+  Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats,
+  Fireflies, Moonlit. Pick one in Settings > Screen or type `/theme <name>`;
+  a bare `/theme` clears it. The canvas pauses on hidden tabs and draws one
+  still frame under reduced motion.
+- Claude pet: Clawd, drawn from the pixel map Claude Code uses for its start-up
+  glyph. He blinks, looks around while a turn runs, and is off by default.
+- The session surface is a positioned wrapper so the wallpaper and the pet sit
+  behind the transcript instead of over it.
+
 ## 0.16.0 - 2026-10-30
 
 - The terminal dock is gone from the UI: no titlebar terminal button and no

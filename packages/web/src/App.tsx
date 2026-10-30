@@ -41,6 +41,10 @@ import type {
   WorktreeCreateResult,
   WorktreeStatusResult,
 } from "@claude-ui/protocol";
+import { chatThemeOf, loadChatTheme, saveChatTheme, themeFromCommand, useChatTheme } from "./chat-theme.ts";
+import { ChatWallpaper } from "./chat-wallpaper.tsx";
+import { ClaudePet } from "./claude-pet.tsx";
+import { loadPetEnabled } from "./pet-setting.ts";
 import { isPromptImage, MAX_UPLOAD_BYTES, ORCHESTRATION_NOTICE, PERMISSION_MODES, permissionModesFor, type SearchHit, type SettingsResult } from "@claude-ui/protocol";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -3800,6 +3804,8 @@ export function SessionPane({
   /** `/mcp`, `/skills`, `/plugins` typed alone, `/resume` with or without text: opens that dialog instead of sending. */
   onDialog?: (dialog: DialogName, arg?: string) => void;
 }) {
+  const theme = useChatTheme();
+  const pet = loadPetEnabled();
   const phone = usePhone();
   const current = runOf(view, run);
   const pendingPart = pendingPermission(view);
@@ -3889,6 +3895,7 @@ export function SessionPane({
   const dockHidden = useHideOnScroll(card, phone, turnRunning || shellRunning || !!permission || !!question || !!current || dockFocused);
 
   return (
+    <div className="relative flex min-h-0 flex-1 flex-col" data-testid="session-surface">
     <MediaContext value={onMedia}>
     <ArtifactPreviewContext value={onArtifactPreview}>
     <ArtifactConnectedContext value={connected}>
@@ -3917,6 +3924,12 @@ export function SessionPane({
         )}
       </header>
       )
+      )}
+      {theme !== "none" && <ChatWallpaper theme={theme} />}
+      {pet && (
+        <div className="pointer-events-none absolute right-5 bottom-24 z-10 hidden lg:block">
+          <ClaudePet busy={turnRunning} />
+        </div>
       )}
       {current ? (
         <Conversation key={`${scrollKey}:${current.id}`} className="flex-1">
@@ -4120,6 +4133,7 @@ export function SessionPane({
     </ArtifactConnectedContext>
     </ArtifactPreviewContext>
     </MediaContext>
+    </div>
   );
 }
 
@@ -4343,6 +4357,13 @@ function PromptBox({
   const enterHow: "send" | "queue" = running && onQueue && sendMode === "queue" ? "queue" : "send";
   const altHow: "send" | "queue" = running && onQueue && sendMode === "queue" ? "send" : "queue";
   const send = (t = text, how: "send" | "queue" = enterHow) => {
+    // /theme is a client-side command: it never reaches the daemon.
+    const pick = themeFromCommand(t);
+    if (pick) {
+      saveChatTheme(pick);
+      edit("");
+      return;
+    }
     if (bash) {
       const command = t.trim();
       if (!command || (blocked && !onQueue)) return;

@@ -596,7 +596,7 @@ it("Settings > Screen has the Keep screen awake switches; unsupported here: held
   localStorage.removeItem("claude-ui.keepAwake");
   const { q, pick } = await render();
   await pick("screen");
-  expect(q("settings-screen")?.querySelector("h3")?.textContent).toBe("Screen");
+  expect(q("settings-screen")?.getAttribute("aria-label")).toBe("Screen");
   // jsdom has no wake lock API.
   expect(q("settings-keep-awake")!.getAttribute("aria-disabled")).toBe("true");
   expect(q("settings-screen")!.textContent).toContain("needs HTTPS or localhost");
