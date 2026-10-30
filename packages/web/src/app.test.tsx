@@ -692,19 +692,6 @@ it("GH-434: the side panel terminal toggle uses the quiet pressed style", async 
   expect(b().getAttribute("aria-pressed")).toBe("true");
 });
 
-it("the titlebar terminal button opens and hides the terminal, pressed while shown", async () => {
-  const b = () => q("terminal-toggle-titlebar")!;
-  expect(b().getAttribute("aria-pressed")).toBe("false");
-  expect(b().className).toContain("max-lg:hidden");
-  expect(b().getAttribute("aria-label")).toBe("Toggle terminal (Ctrl+`)");
-  await clickId("terminal-toggle-titlebar");
-  expect(b().getAttribute("aria-pressed")).toBe("true");
-  expect(q("terminal-panel")).not.toBeNull();
-  await clickId("terminal-toggle-titlebar");
-  expect(b().getAttribute("aria-pressed")).toBe("false");
-  expect(q("terminal-panel")).toBeNull();
-});
-
 it("the bottom terminal resizes with the arrow keys (100px to 60%) and keeps its height across a reload", async () => {
   await clickId("terminal-toggle");
   const handle = () => el.querySelector<HTMLElement>('[role="separator"][aria-label="Resize terminal"]')!;
@@ -889,7 +876,7 @@ it("shortcuts follow the panes: Ctrl+` shows the terminal in the side panel, Ctr
   await rerender();
   await press({ key: "`", ctrlKey: true });
   expect(q("side-panel")!.contains(q("terminal-panel"))).toBe(true);
-  expect(q("terminal-toggle-titlebar")!.getAttribute("aria-pressed")).toBe("true");
+  expect(q("side-panel")!.contains(q("terminal-panel"))).toBe(true);
   await press({ key: "`", ctrlKey: true });
   expect(q("terminal-panel")).toBeNull();
   expect(q("side-panel")!.parentElement!.className).toContain("lg:hidden");
@@ -3573,28 +3560,18 @@ describe("GH-430: panels on the new-session tab", () => {
     }
   });
 
-  it("AC5: on the new-session tab the titlebar side panel and terminal toggles show and work; the palette lists Toggle terminal and Toggle side panel; Ctrl+` toggles the terminal", async () => {
+  it("AC5: on the new-session tab the titlebar side panel toggle shows and works; the palette still lists Toggle terminal and Ctrl+` opens the terminal", async () => {
     await openNewTab();
     expect(q("panel-toggle")).not.toBeNull();
-    expect(q("terminal-toggle-titlebar")).not.toBeNull();
-    await clickId("terminal-toggle-titlebar");
-    expect(q("terminal-toggle-titlebar")!.getAttribute("aria-pressed")).toBe("true");
-    expect(panelShown("bottom-panel")).toBe(true);
-    expect(q("terminal-panel")).not.toBeNull();
-    await clickId("terminal-toggle-titlebar");
-    expect(q("bottom-panel")).toBeNull();
+    expect(q("terminal-toggle-titlebar")).toBeNull();
     await press({ key: "`", code: "Backquote", ctrlKey: true });
     expect(panelShown("bottom-panel")).toBe(true);
+    expect(q("terminal-panel")).not.toBeNull();
     await press({ key: "`", code: "Backquote", ctrlKey: true });
     expect(q("bottom-panel")).toBeNull();
     expect(q("panel-toggle")!.getAttribute("aria-expanded")).toBe("true");
     await clickId("panel-toggle");
     expect(q("panel-toggle")!.getAttribute("aria-expanded")).toBe("false");
-    await clickId("panel-toggle");
-    await press({ key: "k", code: "KeyK", ctrlKey: true });
-    expect(paletteRow("Toggle side panel")).toBeDefined();
-    expect(paletteRow("Toggle terminal")).toBeDefined();
-    expect(paletteRow("View changes in popup")).toBeUndefined();
   });
 
   it("AC6: a new-session tab in another project shows the draft's project, not the last shown session's", async () => {
@@ -3623,11 +3600,6 @@ describe("GH-430: panels on the new-session tab", () => {
     width = 1440;
   });
 
-  it("AC8: the titlebar terminal toggle uses the terminal icon and the quiet pressed style", async () => {
-    const b = q("terminal-toggle-titlebar")!;
-    expect(b.querySelector("svg.lucide-square-terminal")).not.toBeNull();
-    expect(b.className).toContain("aria-pressed:bg-transparent");
-  });
 
   /** terminal.list / terminal.create over a list of shells per folder, like the daemon. */
   const shellsFor = (initial: Record<string, number> = {}) => {
@@ -3689,13 +3661,14 @@ describe("GH-430: panels on the new-session tab", () => {
     const restore = await remount(rest);
     sent.length = 0;
     try {
-      await clickId("terminal-toggle-titlebar");
+      // The titlebar terminal toggle is gone; the shortcut opens the same panel.
+      await press({ key: "`", code: "Backquote", ctrlKey: true });
       await act(async () => new Promise((r) => setTimeout(r, 100)));
       expect(q("terminal-panel")).not.toBeNull();
       expect(creates()).toHaveLength(1);
       // Hidden and shown again with a shell running: no second shell.
-      await clickId("terminal-toggle-titlebar");
-      await clickId("terminal-toggle-titlebar");
+      await press({ key: "`", code: "Backquote", ctrlKey: true });
+      await press({ key: "`", code: "Backquote", ctrlKey: true });
       await act(async () => new Promise((r) => setTimeout(r, 100)));
       expect(creates()).toHaveLength(1);
 

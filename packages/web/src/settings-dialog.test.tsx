@@ -239,18 +239,6 @@ it("Default diff view is a per-browser choice: picking Uncommitted saves it and 
   localStorage.removeItem("claude-ui.diffMode");
 });
 
-it("Terminal position: Bottom by default, Side panel saved per browser", async () => {
-  localStorage.removeItem("claude-ui.layout");
-  const { q, pick } = await render();
-  await pick("terminal");
-  expect(q("settings-terminal-position")?.textContent).toContain("Bottom");
-  await act(async () => q("settings-terminal-position")!.click());
-  await act(async () => document.querySelector<HTMLElement>("[data-testid=settings-terminal-position-side]")!.click());
-  expect(JSON.parse(localStorage.getItem("claude-ui.layout")!).areas.side).toContain("terminal");
-  expect(q("settings-terminal-position")?.textContent).toContain("Side panel");
-  localStorage.removeItem("claude-ui.layout");
-});
-
 it("Sidebar section: Show only active sessions is the sidebar's own per-browser setting, off by default (GH-159)", async () => {
   localStorage.clear();
   const { q, pick } = await render();
@@ -297,7 +285,7 @@ it("shows a Guide section whose Restart guide button calls onRestartGuide", asyn
 it("lists the groups: Timeline first, Guide after Tabs, the daemon's groups last", async () => {
   const { q } = await render();
   const ids = [...document.querySelectorAll('[role=tab]')].map((t) => t.textContent);
-  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Terminal", "Tabs", "Keyboard", "Skills", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Provider", "Permissions", "Jira", "About"]);
+  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Tabs", "Keyboard", "Skills", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Provider", "Permissions", "Jira", "About"]);
   expect(q("settings-groups")?.getAttribute("role")).toBe("tablist");
 });
 
