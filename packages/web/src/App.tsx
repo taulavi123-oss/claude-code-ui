@@ -3443,7 +3443,7 @@ function StartingSession({ cwd, place, pending }: { cwd: string; place?: string;
   return (
     <div className={`${card} flex-1`} data-testid="starting-session" aria-busy="true">
       {!phone && (
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4" data-testid="session-header">
+        <header className="relative z-[1] flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-4 backdrop-blur-sm" data-testid="session-header">
           <ProjectAvatar cwd={cwd} />
           <span className="min-w-0 truncate font-medium" title={cwd}>
             {place ?? projectName(cwd)}
@@ -3907,7 +3907,7 @@ export function SessionPane({
       ) : (
       phone ? null : (
       // From sm up: where the session is (project, side, cwd). Below sm the tab switcher says it, so the reading space starts at the top (GH-165).
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4" data-testid="session-header">
+      <header className="relative z-[1] flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-4 backdrop-blur-sm" data-testid="session-header">
         <ProjectAvatar cwd={session.cwd} />
         <span className="min-w-0 truncate font-medium" title={session.cwd} data-testid="session-project">
           {place ?? projectName(session.cwd)}
@@ -3925,15 +3925,21 @@ export function SessionPane({
       </header>
       )
       )}
-      {theme !== "none" && <ChatWallpaper theme={theme} />}
+      {theme !== "none" && (
+        <>
+          <ChatWallpaper theme={theme} />
+          {/* A veil keeps the transcript readable over any wallpaper. */}
+          <div aria-hidden data-testid="chat-scrim" className="pointer-events-none absolute inset-0 bg-background/55 backdrop-blur-[1.5px]" />
+        </>
+      )}
       {pet && (
-        <div className="pointer-events-none absolute right-5 bottom-24 z-10 hidden lg:block">
+        <div className="pointer-events-none absolute right-5 bottom-24 z-10 hidden opacity-90 lg:block">
           <ClaudePet busy={turnRunning} />
         </div>
       )}
       {current ? (
         <Conversation key={`${scrollKey}:${current.id}`} className="flex-1">
-          <ConversationContent className="timeline mx-auto w-full max-w-[800px] 2xl:max-w-[1000px]">
+          <ConversationContent className="timeline relative z-[1] mx-auto w-full max-w-[800px] 2xl:max-w-[1000px]">
             <Timeline view={view} parentId={current.id} />
             {thinking}
           </ConversationContent>
@@ -4577,7 +4583,7 @@ function PromptBox({
       </ul>
     )}
     <div
-      className={`relative flex flex-col rounded-xl border bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring/50 ${lift ? "-mt-11" : ""}`}
+      className={`relative flex flex-col rounded-2xl border border-border/70 bg-card/85 shadow-raised backdrop-blur-sm transition-shadow focus-within:ring-2 focus-within:ring-ring/50 ${lift ? "-mt-11" : ""}`}
       data-testid="prompt-box"
     >
       {!bash && <MarkdownToolbar input={input} disabled={disabled} />}
