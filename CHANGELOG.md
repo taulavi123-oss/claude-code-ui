@@ -2,6 +2,11 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.17.1 - 2026-10-30
+
+- The transcript, the session header and the composer sit above the wallpaper
+  with a readable scrim; the composer is a frosted card with a soft shadow.
+
 ## 0.17.0 - 2026-10-30
 
 - Chat themes: nine live ASCII wallpapers behind the conversation, ported from
