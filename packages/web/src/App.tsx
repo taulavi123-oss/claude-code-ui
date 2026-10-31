@@ -4664,7 +4664,6 @@ function PromptBox({
         modes={modes}
         onMode={onMode}
         onAttach={(f) => void attach(f)}
-        onText={(said) => edit(text ? `${text.replace(/\s+$/, "")} ${said}` : said)}
         agents={agents}
         usage={usage}
         stats={stats}

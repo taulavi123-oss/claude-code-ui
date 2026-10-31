@@ -2,6 +2,11 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.18.2 - 2026-10-31
+
+- The dictation mic is gone (not needed); the placeholder stays
+  `Type / for commands`.
+
 ## 0.18.1 - 2026-10-31
 
 - Prompt box: idle placeholder is `Type / for commands`, and a mic button

@@ -1,6 +1,6 @@
 // Prompt box toolbar (OpenCode prompt input v2): attach, model, effort, permission mode; context meter, send / stop on the right.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowUpIcon, BrainIcon, MicIcon, FilePenIcon, ListPlusIcon, ListTodoIcon, LoaderCircleIcon, MessageCircleQuestionIcon, PlusIcon, ShieldAlertIcon, ShieldBanIcon, ShieldCheckIcon, ShieldIcon, SquareIcon, WifiOffIcon } from "lucide-react";
+import { ArrowUpIcon, BrainIcon, FilePenIcon, ListPlusIcon, ListTodoIcon, LoaderCircleIcon, MessageCircleQuestionIcon, PlusIcon, ShieldAlertIcon, ShieldBanIcon, ShieldCheckIcon, ShieldIcon, SquareIcon, WifiOffIcon } from "lucide-react";
 import { Popover } from "@base-ui/react/popover";
 import { keyText } from "./shortcuts.ts";
 import type { SendMode } from "./send-mode.ts";
@@ -135,8 +135,6 @@ export function PromptToolbar(props: {
   modes: PermissionMode[];
   onMode: (mode: PermissionMode) => void;
   onAttach: (files: File[]) => void;
-  /** Speech-to-text result appended to the prompt; absent: no mic. */
-  onText?: (text: string) => void;
   /** Agents button (session view), after the choosers. */
   agents?: ReactNode;
   /** Context window meter left of send; hidden until the session reports its usage. */
@@ -216,80 +214,10 @@ export function PromptToolbar(props: {
         {props.agents}
       </div>
       <div className="flex items-end gap-1 pointer-coarse:gap-2">
-        <MicButton onText={props.onText} />
         {props.usage && <ContextMeter usage={props.usage} stats={props.stats} />}
         <SendButton state={props.state} hasInput={props.hasInput} onSend={props.onSend} onQueue={props.onQueue} sendMode={props.sendMode} shell={props.shell} onStop={props.onStop} onFocusLost={props.onFocusLost} />
       </div>
     </div>
-  );
-}
-
-type SpeechEvent = { results: ArrayLike<ArrayLike<{ transcript?: string }>> };
-type SpeechRec = {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  onresult: ((e: SpeechEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-};
-type SpeechCtor = new () => SpeechRec;
-
-const speechCtor = (): SpeechCtor | undefined => {
-  const w = window as unknown as { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: SpeechCtor };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
-};
-
-/** Dictation through the browser's Web Speech API; hidden where unavailable. */
-function MicButton({ onText }: { onText?: (text: string) => void }) {
-  const [listening, setListening] = useState(false);
-  const rec = useRef<SpeechRec | null>(null);
-
-  useEffect(() => () => rec.current?.abort(), []);
-
-  if (!speechCtor() || !onText) return null;
-
-  const toggle = () => {
-    if (listening) {
-      rec.current?.stop();
-      setListening(false);
-      return;
-    }
-    const Ctor = speechCtor();
-    if (!Ctor) return;
-    const r = new Ctor();
-    r.lang = navigator.language || "en-US";
-    r.interimResults = false;
-    r.continuous = false;
-    r.onresult = (e) => {
-      const said = Array.from(e.results)
-        .map((x) => x[0]?.transcript ?? "")
-        .join(" ")
-        .trim();
-      if (said) onText(said);
-    };
-    r.onend = () => setListening(false);
-    r.onerror = () => setListening(false);
-    rec.current = r;
-    r.start();
-    setListening(true);
-  };
-
-  return (
-    <button
-      type="button"
-      aria-label={listening ? "Stop dictation" : "Dictate a message"}
-      title={listening ? "Stop dictation" : "Dictate a message"}
-      aria-pressed={listening}
-      onClick={toggle}
-      data-testid="prompt-mic"
-      className={`${GHOST} flex w-7 shrink-0 items-center justify-center px-0! pointer-coarse:w-11 ${listening ? "text-primary" : ""}`}
-    >
-      <MicIcon className={`size-4 ${listening ? "animate-pulse motion-reduce:animate-none" : ""}`} />
-    </button>
   );
 }
 
