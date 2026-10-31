@@ -6,6 +6,8 @@ import { chatThemeOf, type ChatThemeId } from "./chat-theme.ts";
 
 const CELL_W = 13;
 const CELL_H = 17;
+/** 30 fps: the fields drift slowly, so half the frames are invisible. */
+const FRAME_MS = 1000 / 30;
 const TAU = Math.PI * 2;
 
 /** Deterministic noise: a seed paints the same field on every load. */
@@ -83,8 +85,11 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
       const box = el.parentElement?.getBoundingClientRect();
       width = Math.max(320, Math.floor(box?.width ?? window.innerWidth));
       height = Math.max(320, Math.floor(box?.height ?? window.innerHeight));
-      el.width = Math.floor(width * Math.min(2, devicePixelRatio || 1));
-      el.height = Math.floor(height * Math.min(2, devicePixelRatio || 1));
+      // 1.5x is enough for soft characters, and a third fewer pixels than 2x
+      // on a phone, where this canvas shares the CPU with the transcript.
+      const dpr = Math.min(1.5, devicePixelRatio || 1);
+      el.width = Math.floor(width * dpr);
+      el.height = Math.floor(height * dpr);
       el.style.width = `${width}px`;
       el.style.height = `${height}px`;
       cols = Math.ceil(width / CELL_W);
@@ -205,16 +210,19 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
     const frame = () => {
       t += 0.016;
       paint();
-      raf = requestAnimationFrame(frame);
+      raf = window.setTimeout(() => {
+        raf = requestAnimationFrame(frame);
+      }, FRAME_MS) as unknown as number;
     };
 
     const start = () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(raf);
       if (still) paint();
       else frame();
     };
 
-    const onVisibility = () => (document.hidden ? cancelAnimationFrame(raf) : start());
+    const onVisibility = () => (document.hidden ? (cancelAnimationFrame(raf), window.clearTimeout(raf)) : start());
     const onResize = () => (resize(), start());
 
     resize();
@@ -224,6 +232,7 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(raf);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
