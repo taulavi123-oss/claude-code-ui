@@ -3,7 +3,7 @@ import { SideBadge, SideLabel } from "./sides.tsx";
 import { Fragment, memo, use, useEffect, useRef, useState } from "react";
 import { useNarrow } from "@/lib/use-narrow.ts";
 import { Menu } from "@base-ui/react/menu";
-import { ArchiveIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, LocateFixedIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LockIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
+import { ArchiveIcon, ChevronDownIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LocateFixedIcon, LockIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionListItem, SessionState, Worktree } from "@claude-ui/protocol";
 import { cn, useStableProps } from "@/lib/utils";
@@ -538,6 +538,12 @@ export function SessionList({
         </p>
       )}
       <nav className="-mx-1 flex min-h-0 flex-col gap-2 overflow-y-auto px-1" aria-label="Sessions" data-testid="session-list" ref={listRef}>
+        {!archived && !!groups.length && (
+          <p className="flex items-center gap-1 px-1.5 pb-0.5 text-muted-foreground text-xs" data-testid="pinned-caption">
+            Pinned
+            <ChevronDownIcon className="size-3" aria-hidden />
+          </p>
+        )}
         {archived && !!groups.length && (
           <p className="px-1.5 text-muted-foreground text-xs" data-testid="archived-caption">
             Archived sessions

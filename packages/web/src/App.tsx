@@ -43,6 +43,7 @@ import type {
 } from "@claude-ui/protocol";
 import { chatThemeOf, loadChatTheme, saveChatTheme, themeFromCommand, useChatTheme } from "./chat-theme.ts";
 import { ChatWallpaper } from "./chat-wallpaper.tsx";
+import { ThemePicker } from "./theme-picker.tsx";
 import { ClaudePet } from "./claude-pet.tsx";
 import { loadPetEnabled } from "./pet-setting.ts";
 import { isPromptImage, MAX_UPLOAD_BYTES, ORCHESTRATION_NOTICE, PERMISSION_MODES, permissionModesFor, type SearchHit, type SettingsResult } from "@claude-ui/protocol";
@@ -361,6 +362,15 @@ export function App() {
   pinnedRef.current = pinnedSet;
   const [resumeSearch, setResumeSearch] = useState<{ text: string; seq: number }>();
   // Wide screens: the Home button shows or hides the sessions sidebar.
+  const appTheme = useChatTheme();
+  const hostLabel = (() => {
+    try {
+      return location.hostname || "local";
+    } catch {
+      return "local";
+    }
+  })();
+
   const [sidebar, setSidebarState] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_OPEN_KEY) !== "0";
@@ -2419,8 +2429,14 @@ export function App() {
   return (
     <AvatarColors value={colors}>
     <SideLabel value={sideOf.badge}>
-    <div className="flex h-dvh flex-col bg-background text-foreground">
-      <header className="flex h-9 shrink-0 items-center gap-1.5 px-2 max-md:h-11 max-md:gap-2 md:pr-3 md:pl-4" data-testid="titlebar">
+    <div className="relative isolate flex h-dvh flex-col bg-background text-foreground" data-testid="app-root">
+      {appTheme !== "none" && (
+        <>
+          <ChatWallpaper theme={appTheme} />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-background/35" />
+        </>
+      )}
+      <header className="relative z-[1] flex h-9 shrink-0 items-center gap-1.5 px-2 max-md:h-11 max-md:gap-2 md:pr-3 md:pl-4" data-testid="titlebar">
         <IconButton className="md:hidden" label="Sessions" onClick={() => setDrawer(true)} testId="open-drawer">
           <MenuIcon />
         </IconButton>
@@ -2626,12 +2642,12 @@ export function App() {
         }}
         testId="remove-worktree"
       />
-      <div className="flex min-h-0 flex-1 gap-2 px-2 pb-2">
+      <div className="relative z-[1] flex min-h-0 flex-1 gap-2 px-2 pb-2">
         {drawer && <div className="fixed inset-0 z-30 bg-overlay md:hidden" onClick={() => setDrawer(false)} aria-hidden />}
         <aside
           data-testid="sidebar"
           style={{ "--sidebar-w": `${sidebarWidth}px` } as CSSProperties}
-          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 md:w-(--sidebar-w) flex-col gap-3 bg-card p-3 shadow-floating transition-transform md:static md:translate-x-0 md:bg-transparent md:p-1 md:shadow-none ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 flex-col gap-3 bg-card/85 p-3 shadow-floating backdrop-blur-md transition-transform md:static md:w-(--sidebar-w) md:translate-x-0 md:bg-transparent md:p-1 md:shadow-none md:backdrop-blur-none ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
         >
           <ConnectionBadge status={status} />
           <div className="flex items-center gap-2 sm:hidden" data-testid="drawer-tools">
@@ -2679,16 +2695,26 @@ export function App() {
               onArchiveIdle={(ids, where, days) => ids.length && setArchiving({ ids, where, days })}
             />
           )}
-          <button
-            type="button"
-            onClick={() => (setDrawer(false), setSettingsOpen(true))}
-            className="mt-auto flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-11"
-            data-testid="open-settings"
-            data-command="settings.open"
-          >
-            <SettingsIcon className="size-4" />
-            Settings
-          </button>
+          {/* The bottom bar of the desktop sidebar: who this instance belongs
+              to, and the way back into Settings. */}
+          <div className="mt-auto flex items-center gap-2 border-t border-border/50 pt-2" data-testid="sidebar-profile">
+            <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] text-muted-foreground">
+              {hostLabel.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground" title={hostLabel}>
+              {hostLabel}
+            </span>
+            <button
+              type="button"
+              onClick={() => (setDrawer(false), setSettingsOpen(true))}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-muted-foreground text-xs outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-11"
+              data-testid="open-settings"
+              data-command="settings.open"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="size-4" />
+            </button>
+          </div>
         </aside>
         {sidebar && <SidebarResizer width={sidebarWidth} onResize={setSidebarWidth} />}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col" style={{ "--terminal-h": `${terminalHeight}px` } as CSSProperties} data-testid="work-area">
@@ -2715,7 +2741,7 @@ export function App() {
               {/* Every visited session tab stays mounted (hidden), so it keeps its scroll position and draft prompt. */}
               <div
                 ref={areaRef}
-                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${card} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
+                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${appTheme === "none" ? card : "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card/55 shadow-raised backdrop-blur-[2px]"} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
                 data-testid="session-area"
                 data-split={splitShown ? split!.dir : undefined}
               >
@@ -3926,11 +3952,7 @@ export function SessionPane({
       )
       )}
       {theme !== "none" && (
-        <>
-          <ChatWallpaper theme={theme} />
-          {/* A veil keeps the transcript readable over any wallpaper. */}
-          <div aria-hidden data-testid="chat-scrim" className="pointer-events-none absolute inset-0 bg-background/55 backdrop-blur-[1.5px]" />
-        </>
+        <div aria-hidden data-testid="chat-scrim" className="pointer-events-none absolute inset-0 bg-background/45 backdrop-blur-[1px]" />
       )}
       {pet && (
         <div className="pointer-events-none absolute right-5 bottom-24 z-10 hidden opacity-90 lg:block">
@@ -4243,6 +4265,7 @@ function PromptBox({
 }) {
   const phone = usePhone();
   const [initialText] = useState(() => (draftKey ? loadDraft(draftKey) : ""));
+  const chatTheme = useChatTheme();
   const [text, setText] = useState(initialText);
   const [images, setImages] = useState<string[]>([]);
   const [selected, setSelected] = useState(0);
@@ -4586,6 +4609,16 @@ function PromptBox({
       className={`relative flex flex-col rounded-2xl border border-border/70 bg-card/85 shadow-raised backdrop-blur-sm transition-shadow focus-within:ring-2 focus-within:ring-ring/50 ${lift ? "-mt-11" : ""}`}
       data-testid="prompt-box"
     >
+      {/^\/theme(\s.*)?$/.test(text) && !bash && (
+        <ThemePicker
+          current={chatTheme}
+          onPick={(id) => {
+            saveChatTheme(id);
+            edit("");
+          }}
+          onClose={() => edit("")}
+        />
+      )}
       {!bash && <MarkdownToolbar input={input} disabled={disabled} />}
       {bash && (
         <span data-testid="bash-mode" aria-hidden className="pointer-events-none absolute top-4 left-4 font-mono text-sm text-muted-foreground pointer-coarse:text-base">
