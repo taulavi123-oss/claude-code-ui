@@ -100,7 +100,7 @@ describe("first use", () => {
   it("a fresh browser on a daemon with no projects gets the welcome card", async () => {
     setFreshBrowser(true);
     await mount();
-    expect(tour()?.textContent).toContain("Welcome to Claude UI");
+    expect(tour()?.textContent).toContain("Welcome to Claude");
     expect(tour()!.textContent).toContain("Step 1 of 6");
     expect(saved()).toMatchObject({ origin: "new", basics: "pending", session: "pending" });
   });

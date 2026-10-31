@@ -60,7 +60,7 @@ export function ContainerNeeds({ check }: { check?: SideCheck }) {
       <div className="flex flex-col gap-3 border-t border-border px-3 py-3">
         {n.method === "npm" && (
           <p className="text-muted-foreground" data-testid="needs-path">
-            {`Claude UI installs with npm inside this container${n.reason ? ` because ${n.reason}` : ""}.`}
+            {`Claude installs with npm inside this container${n.reason ? ` because ${n.reason}` : ""}.`}
           </p>
         )}
         <ul className="flex flex-col gap-1" data-testid="needs-needed">

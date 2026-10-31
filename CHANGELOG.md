@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.21.0 - 2026-10-31
+
+- The app is named "Claude" everywhere: tab title, unread counter, PWA name,
+  guide welcome and install copy.
+- Icons are Clawd's face: the pixel map of Claude Code's start-up glyph,
+  drawn on Claude orange. Regenerated as PNG (32/180/192/512, maskable) and
+  as icon.svg, all from the same grid.
+
 ## 0.20.1 - 2026-10-31
 
 - User messages are a rounded, translucent bubble capped at 82% width, so the

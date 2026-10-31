@@ -18,7 +18,7 @@ const manifest = JSON.parse(read("manifest.webmanifest")) as Record<string, unkn
 describe("web app manifest", () => {
   it("pins identity and scope and starts standalone", () => {
     expect(manifest).toMatchObject({ id: "/", start_url: "/", scope: "/", display: "standalone" });
-    expect(manifest.name).toBe("Claude UI");
+    expect(manifest.name).toBe("Claude");
   });
 
   it("matches the page's theme color", () => {
@@ -52,7 +52,7 @@ describe("page head", () => {
     expect(pngSize(href!)).toBe("180x180");
     expect(html).toContain('name="apple-mobile-web-app-capable" content="yes"');
     expect(html).toContain('name="mobile-web-app-capable" content="yes"');
-    expect(html).toContain('name="apple-mobile-web-app-title" content="Claude UI"');
+    expect(html).toContain('name="apple-mobile-web-app-title" content="Claude"');
   });
 
   it("links a PNG favicon next to the SVG one", () => {

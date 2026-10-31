@@ -211,7 +211,7 @@ export function SidePanel({
                 Checking {label}…
               </p>
             )}
-            {state.legacy && <p className="text-muted-foreground">This version of Claude UI can't check {label}. You can still install it.</p>}
+            {state.legacy && <p className="text-muted-foreground">This version of Claude can't check {label}. You can still install it.</p>}
           </>
         )}
       </div>
