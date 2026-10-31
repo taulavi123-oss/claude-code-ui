@@ -29,6 +29,39 @@ const TURTLE = [
   "  '.________.'",
 ];
 
+const JELLY = [
+  '  .-"""-.',
+  ' (  o o  )',
+  '  )  ~  (',
+  '   )   (',
+  '  )     (',
+];
+
+const BOAT = [
+  '   /|',
+  '  / |',
+  ' /__|__',
+  '   ---',
+];
+
+const CLOUD = [
+  '   .--.   ',
+  '  (    )  ',
+  ' (______) ',
+];
+
+const MOON = [
+  '  .---.',
+  ' (     )',
+  '  `---`',
+];
+
+const STAR = [
+  '  *  ',
+  ' *** ',
+  '  *  ',
+];
+
 const KOI = [
   "  __  ",
   " /  \\_",
@@ -197,6 +230,40 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
         const cy = height * 0.5 + Math.cos(t * 0.09) * height * 0.16;
         sprite(ctx, TURTLE, cx, cy, 1.4, spec.ink[spec.ink.length - 1]!, 0.55);
         sprite(ctx, TURTLE, width * 0.2 + Math.sin(t * 0.07 + 2) * 60, height * 0.74, 0.8, spec.ink[2]!, 0.35);
+      } else if (spec.kind === "fall") {
+        for (let k = 0; k < 3; k++) {
+          const span = height + 240;
+          const y = ((t * (14 + k * 8) + k * 190) % span) - 120;
+          const x = width * (0.2 + k * 0.3) + Math.sin(t * 0.5 + k) * 24;
+          sprite(ctx, JELLY, x, y, 1.1 - k * 0.2, spec.ink[spec.ink.length - 1]!, 0.45);
+        }
+      } else if (spec.kind === "ripple") {
+        for (let k = 0; k < 2; k++) {
+          const span = width + 260;
+          const x = ((t * (10 + k * 6) + k * 300) % span) - 130;
+          const y = height * (0.36 + k * 0.22) + Math.sin(t * 0.8 + k) * 8;
+          sprite(ctx, BOAT, x, y, 1.2 - k * 0.25, spec.ink[spec.ink.length - 1]!, 0.5);
+        }
+      } else if (spec.kind === "drift") {
+        for (let k = 0; k < 2; k++) {
+          const span = width + 320;
+          const x = ((t * (6 + k * 4) + k * 380) % span) - 160;
+          const y = height * (0.18 + k * 0.3) + Math.sin(t * 0.6 + k) * 6;
+          sprite(ctx, CLOUD, x, y, 1.6 - k * 0.4, spec.ink[spec.ink.length - 1]!, 0.4);
+        }
+      } else if (spec.kind === "stars") {
+        sprite(ctx, MOON, width * 0.74, height * 0.16, 2.2, "#e8eefb", 0.6);
+        for (let k = 0; k < 5; k++) {
+          const tw = 0.35 + 0.35 * Math.sin(t * (1 + k * 0.2) + k);
+          sprite(ctx, STAR, width * (0.08 + ((k * 0.19) % 0.8)), height * (0.1 + ((k * 0.17) % 0.6)), 0.9, "#ffffff", tw);
+        }
+      } else if (spec.kind === "swarm") {
+        for (let k = 0; k < 6; k++) {
+          const x = width * (0.1 + ((k * 0.16) % 0.9)) + Math.sin(t * 0.4 + k) * 20;
+          const y = height * (0.2 + ((k * 0.23) % 0.7)) + Math.cos(t * 0.33 + k) * 16;
+          const glow = 0.3 + 0.5 * Math.max(0, Math.sin(t * (0.9 + k * 0.1) + k));
+          sprite(ctx, STAR, x, y, 0.7, "#fbff9a", glow);
+        }
       } else if (spec.kind === "pond") {
         for (let k = 0; k < 2; k++) {
           const phase = t * (0.22 + k * 0.07) + k * 2.1;

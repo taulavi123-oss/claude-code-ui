@@ -73,7 +73,7 @@ export function ThemePicker({
                 className="relative h-12 w-full overflow-hidden rounded-md"
                 style={{ background: `linear-gradient(135deg, ${t.stops[0] ?? "#111"}, ${t.stops.at(-1) ?? "#333"})` }}
               >
-                <span className="absolute inset-0 opacity-70 [background-image:repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(255,255,255,0.14)_3px,rgba(255,255,255,0.14)_4px)]" />
+                <span className="absolute inset-0 opacity-70 [background-image:repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(255,255,255,0.14)_3px,rgba(255,255,255,0.14)_4px),repeating-linear-gradient(90deg,transparent,transparent_4px,rgba(255,255,255,0.08)_4px,rgba(255,255,255,0.08)_5px)]" />
               </span>
               <span className="flex items-center gap-1 text-[11px] leading-tight text-white/80">
                 <span className="min-w-0 truncate">{t.label}</span>

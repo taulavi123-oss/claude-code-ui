@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.20.0 - 2026-10-31
+
+- Every wallpaper has its subject now: jellyfish drifting down, paper boats
+  crossing the water, clouds sliding by, a moon and twinkling stars, fireflies
+  pulsing. Turtle and koi were already there.
+- Theme thumbnails carry a character grid texture, closer to the wallpapers
+  they stand for.
+
 ## 0.19.1 - 2026-10-31
 
 - Wallpaper cost: 30 fps and a 1.5x device pixel ratio instead of 60 fps at
