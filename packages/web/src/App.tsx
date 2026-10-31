@@ -44,6 +44,7 @@ import type {
 import { chatThemeOf, loadChatTheme, saveChatTheme, themeFromCommand, useChatTheme } from "./chat-theme.ts";
 import { ChatWallpaper } from "./chat-wallpaper.tsx";
 import { ThemePicker } from "./theme-picker.tsx";
+import { RightRail } from "./right-rail.tsx";
 import { ClaudePet } from "./claude-pet.tsx";
 import { loadPetEnabled } from "./pet-setting.ts";
 import { isPromptImage, MAX_UPLOAD_BYTES, ORCHESTRATION_NOTICE, PERMISSION_MODES, permissionModesFor, type SearchHit, type SettingsResult } from "@claude-ui/protocol";
@@ -2848,6 +2849,7 @@ export function App() {
                 </FileLinkContext>
                 </PlanTabContext>
                 </ViewerContext>
+                <RightRail onNew={() => newSession()} onChanges={() => setPanel((v) => !v)} changes={changeCount} sessions={list.length} />
                 {tabs.filter(isPaneRef).map((ref) => (
                   <Activity key={ref} mode={ref === activeId ? "visible" : "hidden"}>
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-pane-tab-body={ref} tabIndex={-1}>

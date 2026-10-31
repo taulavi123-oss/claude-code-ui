@@ -2,6 +2,13 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.19.0 - 2026-10-31
+
+- Right rail over the conversation: new session, changes with a badge, and a
+  live count of the sessions in the list. Hidden below lg.
+- Wallpaper subjects: an ASCII turtle drifts in Honu Lagoon and two koi swim
+  in Koi Pond, painted in the same character grid as the field.
+
 ## 0.18.2 - 2026-10-31
 
 - The dictation mic is gone (not needed); the placeholder stays
