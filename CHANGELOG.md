@@ -2,6 +2,13 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.19.1 - 2026-10-31
+
+- Wallpaper cost: 30 fps and a 1.5x device pixel ratio instead of 60 fps at
+  2x. Same look, roughly half the paint work, which matters on a 2 GB phone.
+- The canvas still stops on a hidden tab and draws one frame under reduced
+  motion.
+
 ## 0.19.0 - 2026-10-31
 
 - Right rail over the conversation: new session, changes with a badge, and a
