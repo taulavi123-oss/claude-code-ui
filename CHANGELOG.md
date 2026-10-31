@@ -2,6 +2,17 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.18.0 - 2026-10-31
+
+- /theme opens the wallpaper strip above the prompt box: eight thumbnails,
+  arrow keys to move, Enter to apply, Esc to close, a check on the active one.
+- The wallpaper now spans the whole window, behind the sidebar; the session
+  card and the sidebar float over it with a translucent blur when a theme is
+  on. No more opaque card hiding the art.
+- Sidebar: a "Pinned" caption over the project list and a bottom profile bar
+  with the host name and the Settings button. The sidebar still hides and
+  shows from the titlebar button, and the choice is remembered.
+
 ## 0.17.1 - 2026-10-30
 
 - The transcript, the session header and the composer sit above the wallpaper
