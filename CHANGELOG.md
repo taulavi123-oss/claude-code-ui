@@ -2,6 +2,13 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.20.1 - 2026-10-31
+
+- User messages are a rounded, translucent bubble capped at 82% width, so the
+  wallpaper reads behind them like the reference design.
+- Test setup polyfills `CSS.escape`: the sidebar's focus-after-Load-more tests
+  no longer throw under jsdom (86/86 pass instead of 10 failures).
+
 ## 0.20.0 - 2026-10-31
 
 - Every wallpaper has its subject now: jellyfish drifting down, paper boats
