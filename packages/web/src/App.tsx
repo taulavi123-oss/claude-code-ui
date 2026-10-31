@@ -4149,7 +4149,7 @@ export function SessionPane({
               agents={<AgentsButton view={view} onOpen={onOpenRun} />}
               label="Prompt"
               inputRef={prompt}
-              placeholder={phone ? (turnRunning ? "Claude is working…" : "Ask Claude…") : turnRunning ? (onQueue ? (sendModeSetting === "queue" ? "Claude is working… (Enter to queue, Alt+Enter to steer, Esc to stop)" : "Claude is working… (Enter to steer, Alt+Enter to queue, Esc to stop)") : "Claude is working… (Enter to steer, Esc to stop)") : "Ask Claude… (Enter to send, Shift+Enter for newline, paste or drop images)"}
+              placeholder={phone ? (turnRunning ? "Claude is working…" : "Ask Claude…") : turnRunning ? (onQueue ? (sendModeSetting === "queue" ? "Claude is working… (Enter to queue, Alt+Enter to steer, Esc to stop)" : "Claude is working… (Enter to steer, Alt+Enter to queue, Esc to stop)") : "Claude is working… (Enter to steer, Esc to stop)") : "Type / for commands"}
             />
           </>
         )}
@@ -4664,6 +4664,7 @@ function PromptBox({
         modes={modes}
         onMode={onMode}
         onAttach={(f) => void attach(f)}
+        onText={(said) => edit(text ? `${text.replace(/\s+$/, "")} ${said}` : said)}
         agents={agents}
         usage={usage}
         stats={stats}

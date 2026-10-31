@@ -731,7 +731,7 @@ it("GH-166: phone: the idle prompt box is one line with a short placeholder; des
   }
   const wide = await render();
   expect(wide.box.rows).toBe(2);
-  expect(wide.box.placeholder).toContain("Enter to send");
+  expect(wide.box.placeholder).toBe("Type / for commands");
 });
 
 it("GH-166: phone: mode, model and effort sit behind one settings chip; the toolbar is one row", async () => {
