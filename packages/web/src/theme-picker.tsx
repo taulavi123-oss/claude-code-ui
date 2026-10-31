@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckIcon } from "lucide-react";
 import { CHAT_THEMES, type ChatThemeId } from "./chat-theme.ts";
+import { ThemePreview } from "./theme-preview.tsx";
 
 const PICKABLE = CHAT_THEMES.filter((t) => t.id !== "none");
 
@@ -54,7 +55,7 @@ export function ThemePicker({
           <kbd className="font-sans">↵</kbd> apply · <kbd className="font-sans">esc</kbd> close
         </span>
       </div>
-      <div ref={row} className="flex gap-2 overflow-x-auto px-3 pb-2">
+      <div ref={row} className="flex gap-1.5 overflow-x-auto px-3 pb-2">
         {PICKABLE.map((t, i) => {
           const active = t.id === current;
           return (
@@ -66,14 +67,10 @@ export function ThemePicker({
               aria-pressed={active}
               onMouseEnter={() => setAt(i)}
               onClick={() => onPick(t.id)}
-              className={`group flex w-[104px] shrink-0 cursor-pointer flex-col gap-1 rounded-lg p-1 text-left outline-none transition-colors ${i === at ? "bg-white/10 ring-1 ring-primary/70" : "hover:bg-white/5"}`}
+              className={`group flex w-[78px] shrink-0 cursor-pointer flex-col gap-1 rounded-lg p-1 text-left outline-none transition-colors ${i === at ? "bg-white/10 ring-1 ring-primary/70" : "hover:bg-white/5"}`}
             >
-              <span
-                aria-hidden
-                className="relative h-12 w-full overflow-hidden rounded-md"
-                style={{ background: `linear-gradient(135deg, ${t.stops[0] ?? "#111"}, ${t.stops.at(-1) ?? "#333"})` }}
-              >
-                <span className="absolute inset-0 opacity-70 [background-image:repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(255,255,255,0.14)_3px,rgba(255,255,255,0.14)_4px),repeating-linear-gradient(90deg,transparent,transparent_4px,rgba(255,255,255,0.08)_4px,rgba(255,255,255,0.08)_5px)]" />
+              <span aria-hidden className="relative h-12 w-full overflow-hidden rounded-md">
+                <ThemePreview id={t.id} />
               </span>
               <span className="flex items-center gap-1 text-[11px] leading-tight text-white/80">
                 <span className="min-w-0 truncate">{t.label}</span>

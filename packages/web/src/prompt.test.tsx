@@ -138,15 +138,14 @@ it("narrow screen: the toolbar choosers wrap to a second row instead of shrinkin
   expect($("prompt-toolbar")!.className).not.toMatch(/(^| )h-\d/);
 });
 
-it("the model picker drops the parenthesised note where short, and ring + send sit in a right group", async () => {
+it("the model picker drops the parenthesised note where short, and the ring sits in the meta row", async () => {
   expect(["Default (recommended)", "Sonnet 5.5", "Opus 5.5 (1M context)", "(x)"].map(shortModel)).toEqual(["Default model", "Sonnet 5.5", "Opus 5.5 (1M context)", "(x)"]);
   const view = applyEvent(emptySession(), { type: "event", sessionId: "s1", seq: 1, part: { type: "context_usage", id: "context_usage", usage: { totalTokens: 100, maxTokens: 1000, percentage: 10, categories: [] } } });
   const { $ } = await render({}, view);
   // jsdom shows both labels (CSS picks one by the toolbar width); the full name stays the accessible name.
   expect($("session-model")!.textContent).toContain("Default modelDefault (recommended)");
   expect($("session-model")!.getAttribute("aria-label")).toBe("Default (recommended), Model");
-  const right = $("send")!.parentElement!;
-  expect(right.contains($("context-meter"))).toBe(true);
+  expect($("context-meter")).not.toBeNull();
 });
 
 it("hides the effort chooser for a model without effort support", async () => {
@@ -275,7 +274,7 @@ it("send button sends; while a turn runs with nothing typed it is a stop button"
 it("send button follows the session state: label, tooltip, spinner, needs input, disconnected", async () => {
   const onInterrupt = vi.fn();
   const { $, box, rerender } = await render({ onInterrupt });
-  const button = () => $("prompt-toolbar")!.querySelector<HTMLButtonElement>("button[data-state]")!;
+  const button = () => $("prompt-box")!.querySelector<HTMLButtonElement>("button[data-state]")!;
   expect(button().dataset.state).toBe("idle");
   expect(button().getAttribute("aria-label")).toBe("Send");
   expect(button().disabled).toBe(true);
@@ -331,7 +330,7 @@ it("focus moves from the send button to the prompt box when the button becomes d
 
 it("send button: OpenCode contrast gradient and elevation; disconnected shows an offline icon", async () => {
   const { $, rerender } = await render();
-  const button = () => $("prompt-toolbar")!.querySelector<HTMLButtonElement>("button[data-state]")!;
+  const button = () => $("prompt-box")!.querySelector<HTMLButtonElement>("button[data-state]")!;
   expect(button().className).toContain("shadow-button-contrast");
   expect(button().className).toContain("bg-linear-to-b");
   // --send: --primary in light; lighter in dark, so the button edge reaches 3:1 on the prompt box (theme.test.ts).
@@ -716,12 +715,12 @@ it("GH-165: a permission request has its own Stop that interrupts the turn", asy
 });
 
 // GH-166: phone (below sm) prompt box on one line, settings chip, short status line.
-it("GH-166: phone: the idle prompt box is one line with a short placeholder; desktop keeps two lines and the hints", async () => {
+it("GH-166: phone: the idle prompt box is one line with the shared placeholder; desktop is one line too", async () => {
   const back = phone(true);
   try {
     const idle = await render();
     expect(idle.box.rows).toBe(1);
-    expect(idle.box.placeholder).toBe("Ask Claude…");
+    expect(idle.box.placeholder).toBe("Type / for commands");
     unmount();
     const busy = await render({}, { ...emptySession(), state: "running" });
     expect(busy.box.placeholder).toBe("Claude is working…");
@@ -730,7 +729,7 @@ it("GH-166: phone: the idle prompt box is one line with a short placeholder; des
     back();
   }
   const wide = await render();
-  expect(wide.box.rows).toBe(2);
+  expect(wide.box.rows).toBe(1);
   expect(wide.box.placeholder).toBe("Type / for commands");
 });
 

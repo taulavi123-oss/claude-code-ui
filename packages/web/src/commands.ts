@@ -60,6 +60,16 @@ export const DIALOG_COMMANDS: (SlashCommand & { dialog: DialogName; always?: boo
   { name: "resume", description: "Resume a previous session", argumentHint: "", dialog: "resume", always: true },
 ];
 
+/** Commands the web app runs itself, so they are discoverable in the `/` picker. */
+export const THEME_COMMAND: SlashCommand = {
+  name: "theme",
+  argumentHint: "[name]",
+  description: "Change the animated ASCII wallpaper",
+};
+
+export const withLocalCommands = (commands: SlashCommand[]): SlashCommand[] =>
+  commands.some((c) => c.name === "theme") ? commands : [...commands, THEME_COMMAND];
+
 const has = (commands: SlashCommand[], name: string) => commands.some((c) => c.name === name || c.aliases?.includes(name));
 
 /** The picker's rows: the session's commands plus the dialog commands (a CLI row of the same name gives way to `always` ones). */

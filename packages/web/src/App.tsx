@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { Activity, lazy, memo, Suspense, use, useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, type ClipboardEvent, type ComponentProps, type CSSProperties, type DragEvent, type KeyboardEvent, type ReactNode, type RefObject } from "react";
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon, CopyIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, MenuIcon, MonitorIcon, MoonIcon, PanelLeftIcon, PanelRightIcon, RotateCcwIcon, SearchIcon, SettingsIcon, SquareIcon, SquareTerminalIcon, SunIcon, TriangleAlertIcon, UsersIcon, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, CopyIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, MenuIcon, MonitorIcon, MoonIcon, PanelLeftIcon, PanelRightIcon, PlusIcon, RotateCcwIcon, SearchIcon, SettingsIcon, SquareIcon, SquareTerminalIcon, SunIcon, TriangleAlertIcon, UsersIcon, XIcon } from "lucide-react";
 import type {
   ContextUsage,
   CreateResult,
@@ -44,8 +44,7 @@ import type {
 import { chatThemeOf, loadChatTheme, saveChatTheme, themeFromCommand, useChatTheme } from "./chat-theme.ts";
 import { ChatWallpaper } from "./chat-wallpaper.tsx";
 import { ThemePicker } from "./theme-picker.tsx";
-import { RightRail } from "./right-rail.tsx";
-import { ClaudePet } from "./claude-pet.tsx";
+import { ClawdCompanion } from "./clawd-companion.tsx";
 import { loadPetEnabled } from "./pet-setting.ts";
 import { isPromptImage, MAX_UPLOAD_BYTES, ORCHESTRATION_NOTICE, PERMISSION_MODES, permissionModesFor, type SearchHit, type SettingsResult } from "@claude-ui/protocol";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
@@ -64,8 +63,8 @@ import { ImageStrip, readDataUrl, readImages } from "./images.tsx";
 import { ArtifactConnectedContext, ArtifactPreviewContext, type ArtifactPreviewLoader } from "./artifact-preview.tsx";
 import { MediaContext, restoreImages, type MediaLoader } from "./media.ts";
 import { Toast, ToastRegion } from "./toast.tsx";
-import { GHOST, ModePicker, nextMode, PromptToolbar, ROW, type SendState } from "./toolbar.tsx";
-import { activeCommand, choose, dialogArg, dialogOf, insertSlash, matchCommands, withDialogCommands, type DialogName } from "./commands.ts";
+import { GHOST, ModePicker, nextMode, PromptToolbar, ROW, SendButton, type SendState } from "./toolbar.tsx";
+import { activeCommand, choose, dialogArg, dialogOf, insertSlash, matchCommands, withDialogCommands, withLocalCommands, type DialogName } from "./commands.ts";
 import { nextUpdate, UpdateToast, type UpdateInfo } from "./update.tsx";
 import { StaleToast } from "./stale-toast.tsx";
 import { NotificationStack, useNotifications, type CardItem } from "./notifications.tsx";
@@ -87,7 +86,7 @@ import { BLOCK_TEXT, type CleanupScope } from "./cleanup.ts";
 import { CleanupDialog } from "./cleanup-dialog.tsx";
 import { CreateWorktreeDialog } from "./create-worktree-dialog.tsx";
 import { appendQuote } from "./quote.ts";
-import { MarkdownToolbar, formatShortcut } from "./markdown-toolbar.tsx";
+import { formatShortcut } from "./markdown-toolbar.tsx";
 import { UserMarkdown } from "./user-markdown.tsx";
 import { clearDrafts, draftKeys, loadDraft, NEW_TAB_DRAFT } from "./drafts.ts";
 import { autoCloseDue, autoCloseTargets, cleanupMenu as buildCleanupMenu, cleanupTargets, loadAutoClose, saveAutoClose, type AutoClose, type CleanupContext, type CleanupRule, type TabFacts } from "./tab-cleanup.ts";
@@ -364,6 +363,8 @@ export function App() {
   const [resumeSearch, setResumeSearch] = useState<{ text: string; seq: number }>();
   // Wide screens: the Home button shows or hides the sessions sidebar.
   const appTheme = useChatTheme();
+  // Bright wallpapers get a darker scrim so the light UI text keeps contrast.
+  const wallLight = !!chatThemeOf(appTheme).light;
   const hostLabel = (() => {
     try {
       return location.hostname || "local";
@@ -391,7 +392,7 @@ export function App() {
     });
   };
   // Wide screens: the sidebar's width, dragged on its edge; kept per browser. The narrow-screen drawer is min(85vw, 360px).
-  const [sidebarWidth, setSidebarWidth] = useState(() => loadNumber(SIDEBAR_WIDTH_KEY, 288));
+  const [sidebarWidth, setSidebarWidth] = useState(() => loadNumber(SIDEBAR_WIDTH_KEY, 252));
   useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
@@ -2434,7 +2435,7 @@ export function App() {
       {appTheme !== "none" && (
         <>
           <ChatWallpaper theme={appTheme} />
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-background/35" />
+          <div aria-hidden className={`pointer-events-none absolute inset-0 ${wallLight ? "bg-black/35" : "bg-background/15"}`} />
         </>
       )}
       <header className="relative z-[1] flex h-9 shrink-0 items-center gap-1.5 px-2 max-md:h-11 max-md:gap-2 md:pr-3 md:pl-4" data-testid="titlebar">
@@ -2648,9 +2649,9 @@ export function App() {
         <aside
           data-testid="sidebar"
           style={{ "--sidebar-w": `${sidebarWidth}px` } as CSSProperties}
-          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 flex-col gap-3 bg-card/85 p-3 shadow-floating backdrop-blur-md transition-transform md:static md:w-(--sidebar-w) md:translate-x-0 md:bg-transparent md:p-1 md:shadow-none md:backdrop-blur-none ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 flex-col gap-3 bg-card/85 p-3 shadow-floating backdrop-blur-md transition-transform md:static md:w-(--sidebar-w) md:translate-x-0 md:bg-black/35 md:p-2 md:shadow-none md:backdrop-blur-xl ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
         >
-          <ConnectionBadge status={status} />
+          {status !== "connected" && <ConnectionBadge status={status} />}
           <div className="flex items-center gap-2 sm:hidden" data-testid="drawer-tools">
             {canQuickOpen && (
               <IconButton label={quickOpenLabel} onClick={() => (setDrawer(false), showQuickOpen())} testId="drawer-quick-open">
@@ -2663,7 +2664,7 @@ export function App() {
             </IconButton>
           </div>
           {error && <p className="text-destructive">{error}</p>}
-          {status !== "unauthorized" && <FocusRow count={waitingN} active={activeId === FOCUS_TAB} onOpen={() => open(FOCUS_TAB)} />}
+          {status !== "unauthorized" && (waitingN > 0 || activeId === FOCUS_TAB) && <FocusRow count={waitingN} active={activeId === FOCUS_TAB} onOpen={() => open(FOCUS_TAB)} />}
           {status !== "unauthorized" && (
             <SessionList
               onCopy={copyText}
@@ -2698,11 +2699,11 @@ export function App() {
           )}
           {/* The bottom bar of the desktop sidebar: who this instance belongs
               to, and the way back into Settings. */}
-          <div className="mt-auto flex items-center gap-2 border-t border-border/50 pt-2" data-testid="sidebar-profile">
-            <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] text-muted-foreground">
+          <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-2" data-testid="sidebar-profile">
+            <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#7fb4ff] to-[#3f6fd8] text-[11px] font-semibold text-white">
               {hostLabel.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground" title={hostLabel}>
+            <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/80" title={hostLabel}>
               {hostLabel}
             </span>
             <button
@@ -2742,7 +2743,7 @@ export function App() {
               {/* Every visited session tab stays mounted (hidden), so it keeps its scroll position and draft prompt. */}
               <div
                 ref={areaRef}
-                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${appTheme === "none" ? card : "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card/55 shadow-raised backdrop-blur-[2px]"} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
+                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${appTheme === "none" ? card : "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-black/30 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm"} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
                 data-testid="session-area"
                 data-split={splitShown ? split!.dir : undefined}
               >
@@ -2849,7 +2850,6 @@ export function App() {
                 </FileLinkContext>
                 </PlanTabContext>
                 </ViewerContext>
-                <RightRail onNew={() => newSession()} onChanges={() => setPanel((v) => !v)} changes={changeCount} sessions={list.length} />
                 {tabs.filter(isPaneRef).map((ref) => (
                   <Activity key={ref} mode={ref === activeId ? "visible" : "hidden"}>
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-pane-tab-body={ref} tabIndex={-1}>
@@ -3608,7 +3608,7 @@ export function NewSession({
           blocked={creating ? "Creating worktree…" : undefined}
           blockedIcon={creating ? <LoaderCircleIcon aria-hidden className="size-4 shrink-0 animate-spin text-muted-foreground motion-reduce:animate-none" /> : undefined}
           label="First prompt"
-          placeholder={cwd ? `Ask Claude in ${worktreeName(cwd, worktrees) ?? projectName(cwd)}…` : "Open a project to start"}
+          placeholder={cwd ? "Type / for commands" : "Open a project to start"}
           autoFocus
           disabled={!cwd}
           inputRef={inputRef}
@@ -3935,15 +3935,12 @@ export function SessionPane({
       ) : (
       phone ? null : (
       // From sm up: where the session is (project, side, cwd). Below sm the tab switcher says it, so the reading space starts at the top (GH-165).
-      <header className="relative z-[1] flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-4 backdrop-blur-sm" data-testid="session-header">
+      <header className="relative z-[1] flex h-10 shrink-0 items-center justify-center gap-2 px-4 text-[13px]" data-testid="session-header">
         <ProjectAvatar cwd={session.cwd} />
-        <span className="min-w-0 truncate font-medium" title={session.cwd} data-testid="session-project">
+        <span className="min-w-0 truncate font-medium text-foreground/85" title={session.cwd} data-testid="session-project">
           {place ?? projectName(session.cwd)}
         </span>
         <SideBadge cwd={session.cwd} />
-        <span className="min-w-0 truncate text-muted-foreground" title={session.cwd}>
-          {session.cwd}
-        </span>
         {/* Idle, running and needs input show in the tab and the send button. Only error and closed have no other place. */}
         {(shownState(view) === "error" || shownState(view) === "closed") && (
           <span className="rounded bg-muted px-2 py-0.5 text-xs" data-testid="session-state">
@@ -3954,16 +3951,14 @@ export function SessionPane({
       )
       )}
       {theme !== "none" && (
-        <div aria-hidden data-testid="chat-scrim" className="pointer-events-none absolute inset-0 bg-background/45 backdrop-blur-[1px]" />
+        <div aria-hidden data-testid="chat-scrim" className="pointer-events-none absolute inset-0 bg-background/15" />
       )}
       {pet && (
-        <div className="pointer-events-none absolute right-5 bottom-24 z-10 hidden opacity-90 lg:block">
-          <ClaudePet busy={turnRunning} />
-        </div>
+        <ClawdCompanion state={view.state === "needs_input" ? "waiting" : view.working ? "thinking" : turnRunning ? "writing" : "idle"} />
       )}
       {current ? (
         <Conversation key={`${scrollKey}:${current.id}`} className="flex-1">
-          <ConversationContent className="timeline relative z-[1] mx-auto w-full max-w-[800px] 2xl:max-w-[1000px]">
+          <ConversationContent className="timeline relative z-[1] mx-auto w-full max-w-[680px] font-mono text-[13px]">
             <Timeline view={view} parentId={current.id} />
             {thinking}
           </ConversationContent>
@@ -4083,7 +4078,7 @@ export function SessionPane({
       )}
       <div
         ref={dock}
-        className={`relative mx-auto flex w-full max-w-3xl flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 ${dockHidden ? "hidden" : ""}`}
+        className={`relative mx-auto flex w-full max-w-[720px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 ${dockHidden ? "hidden" : ""}`}
         data-hidden={dockHidden || undefined}
         onFocus={() => setDockFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setDockFocused(false)}
@@ -4151,7 +4146,7 @@ export function SessionPane({
               agents={<AgentsButton view={view} onOpen={onOpenRun} />}
               label="Prompt"
               inputRef={prompt}
-              placeholder={phone ? (turnRunning ? "Claude is working…" : "Ask Claude…") : turnRunning ? (onQueue ? (sendModeSetting === "queue" ? "Claude is working… (Enter to queue, Alt+Enter to steer, Esc to stop)" : "Claude is working… (Enter to steer, Alt+Enter to queue, Esc to stop)") : "Claude is working… (Enter to steer, Esc to stop)") : "Type / for commands"}
+              placeholder={phone ? (turnRunning ? "Claude is working…" : "Type / for commands") : turnRunning ? (onQueue ? (sendModeSetting === "queue" ? "Claude is working… (Enter to queue, Alt+Enter to steer, Esc to stop)" : "Claude is working… (Enter to steer, Alt+Enter to queue, Esc to stop)") : "Claude is working… (Enter to steer, Esc to stop)") : "Type / for commands"}
             />
           </>
         )}
@@ -4265,7 +4260,6 @@ function PromptBox({
   queueing?: boolean;
   inputRef?: RefObject<HTMLTextAreaElement | null>;
 }) {
-  const phone = usePhone();
   const [initialText] = useState(() => (draftKey ? loadDraft(draftKey) : ""));
   const chatTheme = useChatTheme();
   const [text, setText] = useState(initialText);
@@ -4275,6 +4269,7 @@ function PromptBox({
   const [caret, setCaret] = useState(0);
   const [found, setFound] = useState<{ query: string; paths: string[] }>();
   const [sendError, setSendError] = useState<string>();
+  const file = useRef<HTMLInputElement | null>(null);
   // Bash mode: the text is a shell command, the box looks like OpenCode's shell mode.
   const [bash, setBash] = useState(false);
   const dropDraft = useDraft(draftKey, text, bash, initialText);
@@ -4285,7 +4280,10 @@ function PromptBox({
   const composing = useRef(false);
   const token = dismissed || bash ? undefined : activeCommand(text, caret);
   // Dialog commands are actions, not text: only when the slash is the whole prompt.
-  const matches = token && matchCommands(onDialog && token.lead ? withDialogCommands(commands) : commands, text, caret);
+  // The strip owns the keyboard while it is open; the command list and the
+  // ThemePicker must not both answer Enter.
+  const themeOpen = /^\/theme(\s.*)?$/.test(text) && !bash;
+  const matches = token && !themeOpen ? matchCommands(token.lead ? withLocalCommands(onDialog ? withDialogCommands(commands) : commands) : commands, text, caret) : undefined;
   const mention = dismissed || bash || matches ? undefined : activeMention(text, caret);
   // Only results for the query being typed, so Enter never picks a stale path.
   const paths = mention && found?.query === mention.query ? found.paths : [];
@@ -4448,6 +4446,11 @@ function PromptBox({
       const r = insertMention(text, mention!, paths[i]!);
       return edit(r.text, r.caret);
     }
+    // The theme strip opens on the text itself; sending would toggle it off.
+    if (matches[i]!.name === "theme") {
+      edit("/theme");
+      return;
+    }
     if (!token!.lead) {
       const r = insertSlash(text, token!, matches[i]!.name);
       return edit(r.text, r.caret);
@@ -4491,6 +4494,11 @@ function PromptBox({
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter commits the composition, Esc cancels it, arrows pick IME candidates: never send, pick, dismiss or switch modes then.
     if (composing.current || isImeKey(e.nativeEvent)) return;
+    // The theme strip handles Enter itself; sending here would both apply and clear the wallpaper.
+    if (themeOpen && e.key === "Enter") {
+      e.preventDefault();
+      return;
+    }
     // Ctrl/Cmd+B, I, E format the selection; defaultPrevented keeps Ctrl+B from toggling the sidebar here. Not in bash mode.
     if (!bash && formatShortcut(e)) return;
     // OpenCode shell mode: `!` typed at the start of an empty caret switches modes and is not inserted.
@@ -4608,10 +4616,10 @@ function PromptBox({
       </ul>
     )}
     <div
-      className={`relative flex flex-col rounded-2xl border border-border/70 bg-card/85 shadow-raised backdrop-blur-sm transition-shadow focus-within:ring-2 focus-within:ring-ring/50 ${lift ? "-mt-11" : ""}`}
+      className={`relative flex flex-col rounded-xl border border-white/10 bg-black/65 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-shadow focus-within:border-white/20 focus-within:ring-2 focus-within:ring-ring/30 ${lift ? "-mt-11" : ""}`}
       data-testid="prompt-box"
     >
-      {/^\/theme(\s.*)?$/.test(text) && !bash && (
+      {themeOpen && (
         <ThemePicker
           current={chatTheme}
           onPick={(id) => {
@@ -4621,20 +4629,47 @@ function PromptBox({
           onClose={() => edit("")}
         />
       )}
-      {!bash && <MarkdownToolbar input={input} disabled={disabled} />}
       {bash && (
         <span data-testid="bash-mode" aria-hidden className="pointer-events-none absolute top-4 left-4 font-mono text-sm text-muted-foreground pointer-coarse:text-base">
           !
         </span>
       )}
+      <div className="flex items-end gap-1 py-1 pr-1.5 pl-1">
+        {!bash && (
+          <>
+            <button
+              type="button"
+              aria-label="Add images and files"
+              title="Add images and files"
+              data-testid="attach"
+              className={`${GHOST} flex size-9 shrink-0 items-center justify-center px-0! text-white/55`}
+              onClick={() => file.current?.click()}
+              disabled={disabled}
+            >
+              <PlusIcon className="size-4" />
+            </button>
+            <input
+              ref={file}
+              type="file"
+              multiple
+              hidden
+              data-testid="attach-input"
+              onChange={(e) => {
+                const files = [...(e.target.files ?? [])];
+                e.target.value = "";
+                if (files.length) void attach(files);
+              }}
+            />
+          </>
+        )}
       <textarea
         role="combobox"
         aria-expanded={pickerOpen}
         aria-controls="command-picker"
         aria-activedescendant={pickerOpen ? `command-${selected}` : undefined}
         aria-label={bash ? "Shell command" : label}
-        className={`field-sizing-content max-h-[min(240px,40dvh)] min-h-[calc(2lh+1.5rem)] max-sm:min-h-[calc(1lh+1.5rem)] w-full resize-none bg-transparent pt-4 pb-2 text-sm outline-none pointer-coarse:text-base ${bash ? "pr-4 pl-8 font-mono" : "px-4"}`}
-        rows={phone ? 1 : 2}
+        className={`field-sizing-content max-h-[min(240px,40dvh)] min-h-[calc(1lh+1.5rem)] w-full flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-white/35 pointer-coarse:text-base ${bash ? "pl-8 font-mono" : "px-1"}`}
+        rows={1}
         placeholder={bash ? (running || blocked ? "Queue a shell command: it runs when the current work ends" : "Run a shell command (Esc to exit)") : placeholder}
         autoFocus={autoFocus}
         disabled={disabled}
@@ -4656,7 +4691,20 @@ function PromptBox({
         onKeyDown={onKeyDown}
         onPaste={onPaste}
       />
-      <PromptToolbar
+        <SendButton
+          state={state}
+          hasInput={!disabled && !blocked && (!!text.trim() || images.length > 0)}
+          onSend={() => send()}
+          onQueue={onQueue && (() => send(text, "queue"))}
+          sendMode={bash && running ? "queue" : sendMode}
+          shell={bash}
+          onStop={() => onInterrupt?.()}
+          onFocusLost={() => !window.matchMedia?.("(pointer: coarse)").matches && input.current?.focus()}
+        />
+      </div>
+    </div>
+    <PromptToolbar
+        metaOnly
         models={models}
         model={model}
         onModel={onModel}
@@ -4679,7 +4727,6 @@ function PromptBox({
         // Not on touch screens: focusing the prompt box there opens the soft keyboard (OpenCode leaves focus on the page).
         onFocusLost={() => !window.matchMedia?.("(pointer: coarse)").matches && input.current?.focus()}
       />
-    </div>
     </div>
   );
 }

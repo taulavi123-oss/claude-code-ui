@@ -1,0 +1,66 @@
+/* Clawd beside the prompt box (ported from Claudie 1.1.3). */
+.clawd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 0.3s;
+  will-change: transform;
+}
+.clawd.sem-espaco:not(.livre) {
+  opacity: 0;
+  pointer-events: none;
+}
+.clawd canvas {
+  display: block;
+  cursor: grab;
+  touch-action: none;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+.clawd.livre {
+  z-index: 40;
+}
+.clawd.livre canvas {
+  cursor: grabbing;
+}
+.clawd-balao {
+  position: absolute;
+  right: 4px;
+  bottom: calc(100% - 8px);
+  transform: translate(0, 6px) scale(0.96);
+  transform-origin: bottom right;
+  width: max-content;
+  max-width: max(80px, calc(var(--margem, 200px) - 20px));
+  white-space: normal;
+  text-align: left;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: #1e1c1a;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4efe7;
+  font: 500 11.5px ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.25s;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.clawd-balao::after {
+  content: "";
+  position: absolute;
+  right: 44px;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: inherit;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.clawd-balao.on {
+  opacity: 1;
+  transform: none;
+}

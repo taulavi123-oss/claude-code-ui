@@ -2,6 +2,21 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.0 - 2026-11-01
+
+- Wallpapers are Claudie 1.1.3's live engine, ported whole: koi swim, turtles
+  paddle, jellyfish drift, paper boats cross, fireflies glow, the moon sits
+  over moving clouds. Each cell is sampled from vector art and painted as a
+  tile with a glyph. The /theme strip and Settings show real previews.
+- Clawd is the companion again: blink, look at the pointer, walk home, drag
+  and throw, click lines, spin after ten taps, and react to working/waiting.
+- Chat frame: one-line composer with +, input and send; mode at the left and
+  model at the right underneath; dark translucent bar over the wallpaper.
+- Narrow monospace transcript, dark user pill, frosted sidebar with Studio
+  and Sketches, profile pill. The floating right rail is gone.
+- /theme is listed in the slash picker and the strip owns Enter.
+- Font is the terminal mono stack across the app, matching the reference.
+
 ## 0.21.0 - 2026-10-31
 
 - The app is named "Claude" everywhere: tab title, unread counter, PWA name,

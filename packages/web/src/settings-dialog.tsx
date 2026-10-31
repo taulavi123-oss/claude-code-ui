@@ -33,6 +33,7 @@ import {
 import { ListSetting } from "./list-setting.tsx";
 import { JiraSection } from "./jira-settings.tsx";
 import { CHAT_THEMES, saveChatTheme, useChatTheme } from "./chat-theme.ts";
+import { ThemePreview } from "./theme-preview.tsx";
 import { savePetEnabled, usePetEnabled } from "./pet-setting.ts";
 import { PermissionsSection } from "./permissions-settings.tsx";
 import { ProviderSection } from "./provider-settings.tsx";
@@ -234,16 +235,9 @@ function ChatThemeRows() {
               className={`flex flex-col gap-1 rounded-lg border p-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-11 ${theme === t.id ? "border-primary/60 bg-accent" : "hover:bg-accent/50"}`}
               data-testid={`settings-chat-theme-${t.id}`}
             >
-              <span
-                aria-hidden
-                className="h-8 w-full rounded"
-                style={{
-                  background:
-                    t.id === "none"
-                      ? "repeating-linear-gradient(45deg,transparent,transparent 4px,currentColor 4px,currentColor 5px)"
-                      : `linear-gradient(135deg, ${t.stops[0] ?? "#111"}, ${t.stops.at(-1) ?? "#333"})`,
-                }}
-              />
+              <span aria-hidden className="h-12 w-full overflow-hidden rounded">
+                <ThemePreview id={t.id} width={150} height={56} />
+              </span>
               <span className={`text-xs ${theme === t.id ? "font-medium" : ""}`}>{t.label}</span>
             </button>
           ))}

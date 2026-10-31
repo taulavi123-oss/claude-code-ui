@@ -1,9 +1,7 @@
 // Chat themes: live ASCII wallpapers behind the conversation.
 //
-// Palette, gradient stops and glyph sets come from Claudie
-// (https://github.com/siinn1706/claudie, MIT, (c) 2026 Nguyễn Văn Nam and
-// Luis Roberto for Claudinho). This file re-implements the ambient character
-// fields for the browser: no subjects, no audio, no assets copied.
+// Palette and ids come from Claudie (https://github.com/siinn1706/claudie,
+// MIT). The vector subjects and the tile engine live in wallpapers/engine.ts.
 import { useSyncExternalStore } from "react";
 
 export type ChatThemeId = "none" | "claude-code" | "cloud-drift" | "honu-lagoon" | "koi-pond" | "jellyfish" | "paper-boats" | "fireflies" | "moonlit";
@@ -25,6 +23,8 @@ export type ChatTheme = {
   kind: FieldKind;
   /** 0 = still, 1 = lively. */
   motion: number;
+  /** Bright background: the app adds a darker scrim so white text still reads. */
+  light?: boolean;
 };
 
 export const CHAT_THEMES: ChatTheme[] = [
@@ -48,6 +48,7 @@ export const CHAT_THEMES: ChatTheme[] = [
     grid: "rgba(255,255,255,0.09)",
     kind: "drift",
     motion: 0.5,
+    light: true,
   },
   {
     id: "honu-lagoon",
@@ -58,6 +59,7 @@ export const CHAT_THEMES: ChatTheme[] = [
     grid: "rgba(255,255,255,0.07)",
     kind: "flow",
     motion: 0.6,
+    light: true,
   },
   {
     id: "koi-pond",
@@ -88,6 +90,7 @@ export const CHAT_THEMES: ChatTheme[] = [
     grid: "rgba(255,255,255,0.07)",
     kind: "ripple",
     motion: 0.45,
+    light: true,
   },
   {
     id: "fireflies",

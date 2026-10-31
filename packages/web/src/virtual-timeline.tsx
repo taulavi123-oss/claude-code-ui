@@ -223,7 +223,7 @@ export function VirtualTimeline<T>({
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div ref={scrollRef} role="log" className="min-h-0 flex-1 overflow-y-auto [overflow-anchor:none]">
-        <div className="timeline mx-auto w-full max-w-[800px] px-4 pb-4 2xl:max-w-[1000px]">
+        <div className="timeline mx-auto w-full max-w-[680px] px-4 pb-4 font-mono text-[13px]">
           <div className="relative w-full" style={{ height: v.getTotalSize() }}>
             {v.getVirtualItems().map((row) => (
               <div
@@ -253,7 +253,7 @@ export function VirtualTimeline<T>({
       )}
       {stickyItem && (
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10">
-          <div className="mx-auto w-full max-w-[800px] px-4 2xl:max-w-[1000px]">
+          <div className="mx-auto w-full max-w-[680px] px-4 2xl:max-w-[680px]">
             <button
               type="button"
               aria-label={`Go to message: ${stickyItem.label.slice(0, 100)}`}

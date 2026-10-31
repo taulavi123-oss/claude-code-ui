@@ -155,6 +155,8 @@ export function PromptToolbar(props: {
   onStop: () => void;
   /** The focused send button became disabled (stopped or sent from the keyboard, disconnected): focus goes back to the prompt box. */
   onFocusLost: () => void;
+  /** Meta row under the one-line composer: mode/model/context, no attach or send. */
+  metaOnly?: boolean;
 }) {
   const file = useRef<HTMLInputElement>(null);
   // Keep the current value selectable while the list loads or if it is not in the list.
@@ -176,38 +178,42 @@ export function PromptToolbar(props: {
   }));
   return (
     // Phone (below sm): one row, attach, settings chip, agents, then the context ring and send on the right (GH-166).
-    <div className="@container flex items-end gap-1 px-2 py-2 pointer-coarse:gap-2 pointer-coarse:py-1" data-testid="prompt-toolbar">
+    <div className="@container flex items-end gap-1 px-1 pt-1 text-white/70 pointer-coarse:gap-2 pointer-coarse:py-1" data-testid="prompt-toolbar">
       {/* flex-wrap: on a narrow screen a chooser moves to the next row at its full width; nothing shrinks away the model name. */}
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 pointer-coarse:gap-2 max-sm:flex-nowrap">
-        <button
-          type="button"
-          aria-label="Add images and files"
-          title="Add images and files"
-          data-testid="attach"
-          className={`${GHOST} flex w-7 shrink-0 items-center justify-center px-0! pointer-coarse:w-11`}
-          onClick={() => file.current?.click()}
-        >
-          <PlusIcon className="size-4" />
-        </button>
-        {/* No `accept`: any file; on a phone this opens the native picker (camera, photos, files). */}
-        <input
-          ref={file}
-          type="file"
-          multiple
-          hidden
-          data-testid="attach-input"
-          onChange={(e) => {
-            const files = [...(e.target.files ?? [])];
-            e.target.value = "";
-            if (files.length) props.onAttach(files);
-          }}
-        />
+        {!props.metaOnly && (
+          <>
+            <button
+              type="button"
+              aria-label="Add images and files"
+              title="Add images and files"
+              data-testid="attach"
+              className={`${GHOST} flex w-7 shrink-0 items-center justify-center px-0! pointer-coarse:w-11`}
+              onClick={() => file.current?.click()}
+            >
+              <PlusIcon className="size-4" />
+            </button>
+            {/* No `accept`: any file; on a phone this opens the native picker (camera, photos, files). */}
+            <input
+              ref={file}
+              type="file"
+              multiple
+              hidden
+              data-testid="attach-input"
+              onChange={(e) => {
+                const files = [...(e.target.files ?? [])];
+                e.target.value = "";
+                if (files.length) props.onAttach(files);
+              }}
+            />
+          </>
+        )}
         {phone ? (
           <SettingsChip {...props} models={models} efforts={efforts} effort={effort} modelItems={modelItems} />
         ) : (
           <>
             <ModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} />
-            <Chooser label="Model" testId="session-model" value={props.model} onChange={props.onModel} items={modelItems} className="max-w-55" />
+            <Chooser label="Model" testId="session-model" value={props.model} onChange={props.onModel} items={modelItems} className={`max-w-55 ${props.metaOnly ? "ml-auto" : ""}`} />
             {efforts.length > 0 && <EffortPicker efforts={efforts} effort={effort} onEffort={props.onEffort} />}
           </>
         )}
@@ -215,7 +221,9 @@ export function PromptToolbar(props: {
       </div>
       <div className="flex items-end gap-1 pointer-coarse:gap-2">
         {props.usage && <ContextMeter usage={props.usage} stats={props.stats} />}
-        <SendButton state={props.state} hasInput={props.hasInput} onSend={props.onSend} onQueue={props.onQueue} sendMode={props.sendMode} shell={props.shell} onStop={props.onStop} onFocusLost={props.onFocusLost} />
+        {!props.metaOnly && (
+          <SendButton state={props.state} hasInput={props.hasInput} onSend={props.onSend} onQueue={props.onQueue} sendMode={props.sendMode} shell={props.shell} onStop={props.onStop} onFocusLost={props.onFocusLost} />
+        )}
       </div>
     </div>
   );
@@ -273,7 +281,7 @@ export function sendHint({ steer, canQueue, queue, shell }: { steer: boolean; ca
   return queue ? `${enter} queue · ${alt} steer` : `${enter} steer · ${alt} queue`;
 }
 
-function SendButton({ state, hasInput, onSend, onQueue, sendMode = "steer", shell, onStop, onFocusLost }: { state: SendState; hasInput: boolean; onSend: () => void; onQueue?: () => void; sendMode?: SendMode; shell?: boolean; onStop: () => void; onFocusLost: () => void }) {
+export function SendButton({ state, hasInput, onSend, onQueue, sendMode = "steer", shell, onStop, onFocusLost }: { state: SendState; hasInput: boolean; onSend: () => void; onQueue?: () => void; sendMode?: SendMode; shell?: boolean; onStop: () => void; onFocusLost: () => void }) {
   const ref = useRef<HTMLButtonElement>(null);
   const disabled = state === "disconnected" || (state === "idle" && !hasInput);
   // Chrome blurs a focused button the moment it is disabled, inside React's commit: React drops the event (native listener) and the

@@ -465,7 +465,7 @@ export function SessionList({
   const treeHint = searching ? " (clear the search first)" : "";
   const header = (
     <div className="flex h-7 items-center pl-1.5 max-md:h-11">
-      <h2 className="min-w-0 flex-1 truncate font-medium text-muted-foreground text-sm">Projects</h2>
+      <h2 className="min-w-0 flex-1 truncate font-medium text-[13px] text-foreground/90 tracking-wide">Studio</h2>
       <div className="flex shrink-0 items-center gap-0.5">
         <IconButton label="Open project" onClick={onOpenProject} testId="open-project">
           <FolderPlusIcon />
@@ -665,6 +665,17 @@ export function SessionList({
           );
         })}
       </nav>
+      <button
+        type="button"
+        onClick={() => setArchived(!archived)}
+        className="flex h-8 w-full shrink-0 items-center gap-2 rounded-md px-1.5 text-left text-[13px] text-muted-foreground outline-none transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        data-testid="sketches"
+        aria-pressed={archived}
+      >
+        <ArchiveIcon className="size-4 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1 truncate">Sketches</span>
+        <span className="text-[11px] text-faint">{archived ? "shown" : ""}</span>
+      </button>
     </div>
   );
 }
