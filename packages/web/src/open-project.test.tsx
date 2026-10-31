@@ -725,7 +725,7 @@ describe("side chooser", () => {
       const old = Object.assign(new Error(code === "side_not_ready" ? "WSL: Ubuntu is not running. Open it in the project picker to start it." : "unknown message type side.check"), { code });
       const { kind, click, byId, status, onStartSide, onCheckSide } = await withCheck(old);
       await click(kind("WSL"));
-      expect(status()).toContain("This version of Claude UI can't check WSL: Ubuntu. You can still install it.");
+      expect(status()).toContain("This version of Claude can't check WSL: Ubuntu. You can still install it.");
       expect(status()).not.toMatch(/daemon|\bside\b/i);
       expect(byId("side-check-row")).toBeNull();
       expect(byId("side-check-again")).toBeNull();

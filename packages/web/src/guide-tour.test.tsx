@@ -65,7 +65,7 @@ it("is a modal dialog named by its title, showing 'Step 1 of N' with the focus o
   await show();
   expect(pop().getAttribute("role")).toBe("dialog");
   expect(pop().getAttribute("aria-modal")).toBe("true");
-  expect(document.getElementById(pop().getAttribute("aria-labelledby")!)!.textContent).toBe("Welcome to Claude UI");
+  expect(document.getElementById(pop().getAttribute("aria-labelledby")!)!.textContent).toBe("Welcome to Claude");
   expect(q("guide-progress")!.textContent).toBe("Step 1 of 6");
   expect(document.activeElement).toBe(button("Start tour"));
 });

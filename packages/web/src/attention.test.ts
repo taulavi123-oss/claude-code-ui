@@ -4,7 +4,7 @@ import { announcement, faviconHref, setFavicon } from "./attention.ts";
 import { tabTitle } from "./unread.ts";
 
 it("the title carries the number of sessions that need input, none at 0", () => {
-  expect([0, 1, 3].map(tabTitle)).toEqual(["Claude UI", "(1) Claude UI", "(3) Claude UI"]);
+  expect([0, 1, 3].map(tabTitle)).toEqual(["Claude", "(1) Claude", "(3) Claude"]);
 });
 
 it("the favicon gets a marker with its own shape above 0 and is the plain icon at 0", () => {

@@ -8,7 +8,7 @@ export const isUnread = (v: SessionView, seen: Seen | undefined) => v.attentionS
 
 export const seenNow = (v: SessionView): Seen => ({ epoch: v.logEpoch, seq: v.lastSeq });
 
-export const tabTitle = (unread: number) => (unread ? `(${unread}) Claude UI` : "Claude UI");
+export const tabTitle = (unread: number) => (unread ? `(${unread}) Claude` : "Claude");
 
 const KEY = "claude-ui.seen";
 

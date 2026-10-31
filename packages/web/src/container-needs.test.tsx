@@ -58,7 +58,7 @@ describe("What this container needs", () => {
     await mount(<ContainerNeeds check={muslCheck} />);
     expect(rows("needs-needed")[0]).toBe("false Node.js 22 or newer");
     expect(rows("needs-needed")).toContain("true Network access to the npm registry");
-    expect(document.querySelector('[data-testid="needs-path"]')!.textContent).toBe("Claude UI installs with npm inside this container because the container uses musl (for example Alpine); the bundle needs glibc.");
+    expect(document.querySelector('[data-testid="needs-path"]')!.textContent).toBe("Claude installs with npm inside this container because the container uses musl (for example Alpine); the bundle needs glibc.");
   });
 });
 

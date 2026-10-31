@@ -36,7 +36,7 @@ export const STEPS: GuideStep[] = [
     id: "welcome",
     chapter: "basics",
     anchors: [],
-    title: "Welcome to Claude UI",
+    title: "Welcome to Claude",
     body: "A one-minute tour of projects, sessions, files, changes, git and the terminal. Press → or Next.",
   },
   {

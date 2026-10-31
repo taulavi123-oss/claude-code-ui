@@ -88,7 +88,7 @@ type Source = typeof pierreLight;
 export function adjustTheme(mode: Mode, src: Source): ThemeRegistration {
   return {
     name: DIFF_THEMES[mode],
-    displayName: `Claude UI ${mode}`,
+    displayName: `Claude ${mode}`,
     type: mode,
     colors: { ...src.colors, "editor.background": SURFACE[mode].bg, "editor.foreground": SURFACE[mode].fg },
     tokenColors: src.tokenColors.map((rule) => (rule.settings.foreground ? { ...rule, settings: { ...rule.settings, foreground: adjust(mode, rule.settings.foreground) } } : { ...rule })),
