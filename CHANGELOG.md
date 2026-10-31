@@ -2,6 +2,12 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.18.1 - 2026-10-31
+
+- Prompt box: idle placeholder is `Type / for commands`, and a mic button
+  (Web Speech API) dictates into the prompt. The mic hides itself where the
+  browser has no speech recognition.
+
 ## 0.18.0 - 2026-10-31
 
 - /theme opens the wallpaper strip above the prompt box: eight thumbnails,
