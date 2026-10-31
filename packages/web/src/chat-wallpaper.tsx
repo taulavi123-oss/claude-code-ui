@@ -17,6 +17,45 @@ const rand = (seed: number) => {
   };
 };
 
+/** Subjects painted on top of the field: the turtle of Honu Lagoon and the koi. */
+const TURTLE = [
+  '    .--.',
+  "  .'  ____  '.",
+  " /  .'    '.  \\",
+  "|  (  o  o  )  |",
+  " \\  '.____.'  /",
+  "  '.________.'",
+];
+
+const KOI = [
+  "  __  ",
+  " /  \\_",
+  "| o  _>",
+  " \\__/",
+];
+
+/** Paints one ASCII sprite, clipped to the canvas; returns its box for hit tests. */
+const sprite = (
+  ctx: CanvasRenderingContext2D,
+  rows: string[],
+  x: number,
+  y: number,
+  scale: number,
+  ink: string,
+  alpha = 1,
+) => {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = ink;
+  rows.forEach((row, j) => {
+    [...row].forEach((ch, i) => {
+      if (ch === " ") return;
+      ctx.fillText(ch, x + i * CELL_W * scale, y + j * CELL_H * scale);
+    });
+  });
+  ctx.restore();
+};
+
 const reduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
 export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; className?: string }) {
@@ -144,6 +183,21 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
           ctx.fillStyle = spec.ink[step] ?? spec.ink[0]!;
           const glyph = glyphs[Math.floor(((i * 7 + j * 13) % glyphs.length + d * glyphs.length) % glyphs.length)] ?? glyphs[0];
           ctx.fillText(glyph!, i * CELL_W, j * CELL_H);
+        }
+      }
+
+      // Subjects: the wallpaper's living things, painted in the same cells.
+      if (spec.kind === "flow") {
+        const cx = width * 0.5 + Math.sin(t * 0.12) * width * 0.22;
+        const cy = height * 0.5 + Math.cos(t * 0.09) * height * 0.16;
+        sprite(ctx, TURTLE, cx, cy, 1.4, spec.ink[spec.ink.length - 1]!, 0.55);
+        sprite(ctx, TURTLE, width * 0.2 + Math.sin(t * 0.07 + 2) * 60, height * 0.74, 0.8, spec.ink[2]!, 0.35);
+      } else if (spec.kind === "pond") {
+        for (let k = 0; k < 2; k++) {
+          const phase = t * (0.22 + k * 0.07) + k * 2.1;
+          const cx = width * (0.5 + 0.3 * Math.cos(phase));
+          const cy = height * (0.5 + 0.26 * Math.sin(phase * 1.3));
+          sprite(ctx, KOI, cx, cy, 1.15 - k * 0.2, spec.ink[spec.ink.length - 1]!, 0.5);
         }
       }
     };
