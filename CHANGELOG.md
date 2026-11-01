@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.2 - 2026-11-01
+
+- Settings > Permissions now names the two working styles: Build (prompt
+  before edits and commands) and Plan (write the plan first, no edits).
+  Auto accept and Deny stay.
+- A new session can start in plan mode: the daemon maps the `plan` policy to
+  Claude Code's plan mode; protocol and validator accept it.
+
 ## 0.22.1 - 2026-11-01
 
 - Composer matches the reference exactly: one dark bar with +, the input and

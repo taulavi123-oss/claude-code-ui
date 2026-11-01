@@ -1,5 +1,6 @@
 // Settings › Permissions: the default permission policy for new sessions.
-// ask = Claude Code prompts; auto = bypassPermissions (no prompts); deny = dontAsk
+// ask = Build (prompt before edits/commands); plan = plan mode first;
+// auto = bypassPermissions (no prompts); deny = dontAsk (refuse prompts).
 // (refuse anything that would need a prompt). Existing sessions keep their mode.
 import type { Settings, SettingsPatch } from "@claude-ui/protocol";
 
@@ -12,14 +13,16 @@ type Props = {
 };
 
 const LABELS: Record<Settings["permissions"]["policy"], string> = {
-  ask: "Ask",
+  ask: "Build",
+  plan: "Plan",
   auto: "Auto accept",
   deny: "Deny",
 };
 
 export function PermissionsSection({ permissions, saving, save, bypassAvailable }: Props) {
   const options: { value: Settings["permissions"]["policy"]; title: string; hint: string }[] = [
-    { value: "ask", title: "Ask", hint: "Claude prompts before it edits files or runs commands." },
+    { value: "ask", title: "Build", hint: "Claude builds in the session, prompting before it edits files or runs commands." },
+    { value: "plan", title: "Plan", hint: "Claude writes a plan first and waits for approval; it does not edit files or run commands." },
     {
       value: "auto",
       title: "Auto accept",

@@ -22,6 +22,11 @@ describe("permission policy", () => {
     expect(modeForPolicy("deny", withBypass)).toBe("dontAsk");
   });
 
+  it("plan starts new sessions in plan mode", () => {
+    expect(modeForPolicy("plan", withBypass)).toBe("plan");
+    expect(modeForPolicy("plan", withoutBypass)).toBe("plan");
+  });
+
   it("an unknown policy changes nothing", () => {
     expect(modeForPolicy("nope", withBypass)).toBeUndefined();
     expect(modeForPolicy(undefined, withBypass)).toBeUndefined();

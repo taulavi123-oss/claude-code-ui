@@ -15,6 +15,7 @@ import { PERMISSION_MODES, type PermissionMode } from "@claude-ui/protocol";
  */
 export function modeForPolicy(policy: unknown, modes: readonly PermissionMode[]): PermissionMode | undefined {
   if (policy === "auto") return modes.includes("bypassPermissions") ? "bypassPermissions" : modes.includes("acceptEdits") ? "acceptEdits" : "default";
+  if (policy === "plan") return modes.includes("plan") ? "plan" : "default";
   if (policy === "deny") return modes.includes("dontAsk") ? "dontAsk" : "default";
   return undefined;
 }

@@ -3,7 +3,7 @@ import { SideBadge, SideLabel } from "./sides.tsx";
 import { Fragment, memo, use, useEffect, useRef, useState } from "react";
 import { useNarrow } from "@/lib/use-narrow.ts";
 import { Menu } from "@base-ui/react/menu";
-import { ArchiveIcon, ChevronDownIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LocateFixedIcon, LockIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
+import { ArchiveIcon, ChevronDownIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LocateFixedIcon, LockIcon, PlusIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionListItem, SessionState, Worktree } from "@claude-ui/protocol";
 import { cn, useStableProps } from "@/lib/utils";
@@ -465,7 +465,10 @@ export function SessionList({
   const treeHint = searching ? " (clear the search first)" : "";
   const header = (
     <div className="flex h-7 items-center pl-1.5 max-md:h-11">
-      <h2 className="min-w-0 flex-1 truncate font-medium text-[13px] text-foreground/90 tracking-wide">Studio</h2>
+      <h2 className="flex min-w-0 flex-1 items-center gap-1 truncate font-medium text-[13px] text-foreground/90 tracking-wide">
+        Pinned
+        <ChevronDownIcon className="size-3 text-muted-foreground" aria-hidden />
+      </h2>
       <div className="flex shrink-0 items-center gap-0.5">
         <IconButton label="Open project" onClick={onOpenProject} testId="open-project">
           <FolderPlusIcon />
@@ -665,6 +668,20 @@ export function SessionList({
           );
         })}
       </nav>
+      <div className="flex items-center gap-2 px-1.5 pt-1 text-[13px] text-muted-foreground" data-testid="studio-row">
+        <span className="min-w-0 flex-1 truncate">Studio</span>
+        <ChevronDownIcon className="size-3" aria-hidden />
+        <button
+          type="button"
+          onClick={onOpenProject}
+          aria-label="Add project"
+          title="Add project"
+          className="grid size-5 shrink-0 cursor-pointer place-items-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          data-testid="studio-add"
+        >
+          <PlusIcon className="size-3.5" aria-hidden />
+        </button>
+      </div>
       <button
         type="button"
         onClick={() => setArchived(!archived)}
@@ -672,7 +689,6 @@ export function SessionList({
         data-testid="sketches"
         aria-pressed={archived}
       >
-        <ArchiveIcon className="size-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1 truncate">Sketches</span>
         <span className="text-[11px] text-faint">{archived ? "shown" : ""}</span>
       </button>

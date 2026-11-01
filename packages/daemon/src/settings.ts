@@ -45,7 +45,7 @@ const CHECKS: { [S in keyof Settings]: { [K in keyof Settings[S]]: Check } } = {
     maxOutputTokens: intIn("Provider maximum output tokens", 256, 1000000),
   },
   permissions: {
-    policy: { valid: (v) => v === "ask" || v === "auto" || v === "deny", label: "Permission mode", rule: "ask, auto or deny" },
+    policy: { valid: (v) => v === "ask" || v === "plan" || v === "auto" || v === "deny", label: "Permission mode", rule: "ask, plan, auto or deny" },
     maxSessions: intIn("Session limit", 0, 20),
   },
   performance: { monitor: bool("Performance monitor") },

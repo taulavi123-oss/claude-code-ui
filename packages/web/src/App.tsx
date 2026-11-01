@@ -2704,8 +2704,9 @@ export function App() {
               {hostLabel.slice(0, 1).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/80" title={hostLabel}>
-              {hostLabel}
+              Studio <span className="text-muted-foreground">· Max</span>
             </span>
+            <ChevronDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
             <button
               type="button"
               onClick={() => (setDrawer(false), setSettingsOpen(true))}
