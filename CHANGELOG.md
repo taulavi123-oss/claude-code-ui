@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.4 - 2026-11-01
+
+- Wallpaper runs at 25 fps with every subject animation intact: koi swim,
+  turtles paddle, jellyfish drift, boats cross, fireflies glow, the moon sits
+  over moving clouds.
+- Pointer interaction with the wallpaper is gone: no trail, no ripple on
+  hover, no click effects. It is scenery. The pet keeps its own interaction.
+
 ## 0.22.3 - 2026-11-01
 
 - Lighter on a 2 GB box: wallpaper runs at 20 fps on a 16x22 grid with
