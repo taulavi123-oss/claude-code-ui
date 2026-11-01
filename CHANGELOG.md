@@ -2,6 +2,15 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.1 - 2026-11-01
+
+- Composer matches the reference exactly: one dark bar with +, the input and
+  the send key; the markdown toolbar and the in-card control row are gone.
+- Under the bar: permission mode at the left, model and effort at the right,
+  and only the context ring (no token text). The In/Out/Cached status line is
+  removed from the dock.
+- Chat frame is a dark glass pane over the moving wallpaper.
+
 ## 0.22.0 - 2026-11-01
 
 - Wallpapers are Claudie 1.1.3's live engine, ported whole: koi swim, turtles

@@ -217,10 +217,10 @@ export function PromptToolbar(props: {
             {efforts.length > 0 && <EffortPicker efforts={efforts} effort={effort} onEffort={props.onEffort} />}
           </>
         )}
-        {props.agents}
+        {!props.metaOnly && props.agents}
       </div>
       <div className="flex items-end gap-1 pointer-coarse:gap-2">
-        {props.usage && <ContextMeter usage={props.usage} stats={props.stats} />}
+        {props.usage && <ContextMeter usage={props.usage} stats={props.stats} ringOnly={props.metaOnly} />}
         {!props.metaOnly && (
           <SendButton state={props.state} hasInput={props.hasInput} onSend={props.onSend} onQueue={props.onQueue} sendMode={props.sendMode} shell={props.shell} onStop={props.onStop} onFocusLost={props.onFocusLost} />
         )}

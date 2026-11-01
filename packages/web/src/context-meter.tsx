@@ -94,7 +94,7 @@ export function ContextPopup({ usage, side, stats }: { usage: ContextUsage; side
   );
 }
 
-export function ContextMeter({ usage, stats }: { usage: ContextUsage; stats?: Totals }) {
+export function ContextMeter({ usage, stats, ringOnly = false }: { usage: ContextUsage; stats?: Totals; ringOnly?: boolean }) {
   const { totalTokens, maxTokens, percentage } = usage;
   const tip = useId();
   const rows: [string, string][] = [
@@ -126,8 +126,8 @@ export function ContextMeter({ usage, stats }: { usage: ContextUsage; stats?: To
         >
           <Ring percent={percentage} />
           {/* Narrow toolbar (phone, pane beside panels): percent only, so the choosers keep one row; tooltip and popover have the numbers. */}
-          <span className="hidden @[40rem]:inline">{`${compact.format(totalTokens)} / ${compact.format(maxTokens)} · `}</span>
-          {`${percentage}%`}
+          {!ringOnly && <span className="hidden @[40rem]:inline">{`${compact.format(totalTokens)} / ${compact.format(maxTokens)} · `}</span>}
+          {!ringOnly && `${percentage}%`}
         </Popover.Trigger>
       </span>
       <ContextPopup usage={usage} side="top" stats={stats} />

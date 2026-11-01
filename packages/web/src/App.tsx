@@ -96,7 +96,7 @@ import { useDraft } from "./use-draft.ts";
 import { QuoteAction, QuoteButton, QuoteContext } from "./quote-button.tsx";
 import { PlanMeter } from "./plan-meter.tsx";
 import { ContinueDock } from "./continue-dock.tsx";
-import { StatusBar, totals, type Totals } from "./status-bar.tsx";
+import { totals, type Totals } from "./status-bar.tsx";
 import { rewindOptions } from "./rewind.ts";
 import { useSmoothText } from "./smooth.ts";
 import { disablePush, enablePush, pushSubscription, pushSupported, sendSubscription } from "./push.ts";
@@ -4150,7 +4150,6 @@ export function SessionPane({
             />
           </>
         )}
-        <StatusBar view={view} git={onGitStatus} />
       </div>
     </AgentLinksContext>
     </OpenRunContext>
