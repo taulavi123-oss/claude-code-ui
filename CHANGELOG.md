@@ -2,6 +2,17 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.3 - 2026-11-01
+
+- Lighter on a 2 GB box: wallpaper runs at 20 fps on a 16x22 grid with
+  supersampling 2 and dpr 1.25, and stops while the tab is hidden; Clawd runs
+  at 20 fps and measures its spot every 800 ms.
+- Removed most backdrop blur: the sidebar and composer use a small blur over
+  a darker tint, and the theme strip is near opaque. The wallpaper stays
+  sharp instead of a blurry wash.
+- Sidebar has rounded corners and a hairline border.
+- The meta row shows short labels: Ask/Plan/Auto, model without the note.
+
 ## 0.22.2 - 2026-11-01
 
 - Settings > Permissions now names the two working styles: Build (prompt

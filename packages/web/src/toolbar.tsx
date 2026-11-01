@@ -109,7 +109,7 @@ export function Chooser<T extends string>({
 }
 
 /** Permission mode chooser: in the prompt toolbar and in the tray of the permission and question panels (GH-145). */
-export function ModePicker({ mode, modes, onMode, className = "shrink-0", shortcut = true }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string; /** Shift+Tab cycles the mode only in the prompt textarea: the panels pass false. */ shortcut?: boolean }) {
+export function ModePicker({ mode, modes, onMode, className = "shrink-0", shortcut = true, short = false }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string; /** Shift+Tab cycles the mode only in the prompt textarea: the panels pass false. */ shortcut?: boolean; /** One word: the meta row under the composer. */ short?: boolean }) {
   const all = modes.includes(mode) ? modes : [mode, ...modes];
   const Mode = MODE_LABEL[mode].Icon;
   return (
@@ -119,7 +119,7 @@ export function ModePicker({ mode, modes, onMode, className = "shrink-0", shortc
       value={mode}
       onChange={onMode}
       icon={<Mode className="size-4" />}
-      items={all.map((m) => ({ value: m, label: MODE_LABEL[m].label, trigger: <span><span className="@2xl:hidden">{MODE_LABEL[m].short}</span><span className="hidden @2xl:inline">{MODE_LABEL[m].label}</span></span> }))}
+      items={all.map((m) => ({ value: m, label: MODE_LABEL[m].label, trigger: <span><span className={short ? "" : "@2xl:hidden"}>{MODE_LABEL[m].short}</span><span className={short ? "hidden" : "hidden @2xl:inline"}>{MODE_LABEL[m].label}</span></span> }))}
       className={className}
     />
   );
@@ -169,7 +169,9 @@ export function PromptToolbar(props: {
     label: m.displayName,
     description: m.description,
     trigger:
-      shortModel(m.displayName) === m.displayName ? undefined : (
+      props.metaOnly ? (
+        <span>{shortModel(m.displayName)}</span>
+      ) : shortModel(m.displayName) === m.displayName ? undefined : (
         <span>
           <span className="sm:hidden">{shortModel(m.displayName)}</span>
           <span className="max-sm:hidden">{m.displayName}</span>
@@ -212,7 +214,7 @@ export function PromptToolbar(props: {
           <SettingsChip {...props} models={models} efforts={efforts} effort={effort} modelItems={modelItems} />
         ) : (
           <>
-            <ModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} />
+            <ModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} short={props.metaOnly} />
             <Chooser label="Model" testId="session-model" value={props.model} onChange={props.onModel} items={modelItems} className={`max-w-55 ${props.metaOnly ? "ml-auto" : ""}`} />
             {efforts.length > 0 && <EffortPicker efforts={efforts} effort={effort} onEffort={props.onEffort} />}
           </>

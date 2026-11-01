@@ -249,7 +249,7 @@ export function mountClawd(host: HTMLElement) {
 
   const desenha = (ms: number) => {
     raf = requestAnimationFrame(desenha);
-    if (document.hidden || !host.offsetParent || (modo === "casa" && ms - ultimoQ < 1000 / 30 - 4)) return;
+    if (document.hidden || !host.offsetParent || (modo === "casa" && ms - ultimoQ < 1000 / 20 - 4)) return;
     const dtq = Math.min(0.05, (ms - (ultimoQ || ms)) / 1000);
     ultimoQ = ms;
     anda(dtq, ms);
@@ -358,8 +358,8 @@ export function mountClawd(host: HTMLElement) {
 
   mede();
   // A retry: the first measurement can happen before the prompt box exists.
-  const warm = window.setTimeout(mede, 400);
-  const timer = window.setInterval(mede, 400);
+  const warm = window.setTimeout(mede, 600);
+  const timer = window.setInterval(mede, 800);
   const ro = new ResizeObserver(mede);
   const surface = host.closest('[data-testid="session-surface"]');
   const comp = surface?.querySelector('[data-testid="prompt-box"]');

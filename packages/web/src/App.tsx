@@ -2649,7 +2649,7 @@ export function App() {
         <aside
           data-testid="sidebar"
           style={{ "--sidebar-w": `${sidebarWidth}px` } as CSSProperties}
-          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 flex-col gap-3 bg-card/85 p-3 shadow-floating backdrop-blur-md transition-transform md:static md:w-(--sidebar-w) md:translate-x-0 md:bg-black/35 md:p-2 md:shadow-none md:backdrop-blur-xl ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed inset-y-0 left-0 z-40 flex w-[min(85vw,360px)] shrink-0 flex-col gap-3 bg-card/85 p-3 shadow-floating backdrop-blur-md transition-transform md:static md:w-(--sidebar-w) md:translate-x-0 md:rounded-xl md:border md:border-white/10 md:bg-black/45 md:p-2 md:shadow-none md:overflow-hidden ${sidebar ? "" : "md:hidden"} ${drawer ? "translate-x-0" : "-translate-x-full"}`}
         >
           {status !== "connected" && <ConnectionBadge status={status} />}
           <div className="flex items-center gap-2 sm:hidden" data-testid="drawer-tools">
@@ -2744,7 +2744,7 @@ export function App() {
               {/* Every visited session tab stays mounted (hidden), so it keeps its scroll position and draft prompt. */}
               <div
                 ref={areaRef}
-                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${appTheme === "none" ? card : "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-black/30 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm"} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
+                className={`relative ${splitShown ? `flex min-h-0 min-w-0 flex-1 ${split!.dir === "row" ? "flex-row" : "flex-col"}` : `${appTheme === "none" ? card : "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-black/20 shadow-[0_20px_60px_rgba(0,0,0,0.35)]"} flex-1`} ${mainShown && pane === "session" ? "" : mainShown ? "hidden lg:flex" : "hidden"}`}
                 data-testid="session-area"
                 data-split={splitShown ? split!.dir : undefined}
               >
@@ -4616,7 +4616,7 @@ function PromptBox({
       </ul>
     )}
     <div
-      className={`relative flex flex-col rounded-xl border border-white/10 bg-black/65 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-shadow focus-within:border-white/20 focus-within:ring-2 focus-within:ring-ring/30 ${lift ? "-mt-11" : ""}`}
+      className={`relative flex flex-col rounded-xl border border-white/10 bg-black/80 shadow-[0_18px_50px_rgba(0,0,0,0.35)] transition-shadow focus-within:border-white/20 focus-within:ring-2 focus-within:ring-ring/30 ${lift ? "-mt-11" : ""}`}
       data-testid="prompt-box"
     >
       {themeOpen && (

@@ -20,7 +20,7 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
     if (!spec) return;
 
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    const renderer = Renderer(el, { cw: 14, ch: 20, ss: 3 });
+    const renderer = Renderer(el, { cw: 16, ch: 22, ss: 2 });
     let raf = 0;
     let t = 0;
     let last = performance.now();
@@ -32,7 +32,7 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
       const box = el.parentElement?.getBoundingClientRect();
       const w = Math.max(320, Math.floor(box?.width ?? window.innerWidth));
       const h = Math.max(320, Math.floor(box?.height ?? window.innerHeight));
-      renderer.dpr = Math.min(1.5, devicePixelRatio || 1);
+      renderer.dpr = Math.min(1.25, devicePixelRatio || 1);
       renderer.resize(w, h);
       if (reduced) renderer.frame(spec, 6, 0.016, null);
     };
@@ -48,7 +48,7 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
     const tick = (ms: number) => {
       raf = requestAnimationFrame(tick);
       if (document.hidden) return;
-      if (ms - last < 1000 / 30 - 4) return;
+      if (ms - last < 1000 / 15 - 4) return;
       const dt = Math.min(0.05, (ms - last) / 1000);
       last = ms;
       t += dt;
@@ -73,6 +73,30 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
       renderer.frame(spec, t, dt, mouse);
     };
 
+    // Typing is the one moment a frame can wait: stop the canvas while the
+    // prompt has focus and resume when it leaves.
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target instanceof Element ? e.target : null;
+      if (!target?.closest('[data-testid="prompt-box"]')) return;
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    const onFocusOut = () => {
+      if (!raf && !reduced && !document.hidden) {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else if (!reduced && !raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
     const onClick = (e: MouseEvent) => {
       const target = e.target instanceof Element ? e.target : null;
       if (target?.closest(UI)) return;
@@ -85,6 +109,9 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
     window.addEventListener("pointermove", onMove, { passive: true });
     document.addEventListener("pointerleave", onLeave);
     window.addEventListener("mousedown", onClick);
+    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -92,6 +119,9 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("mousedown", onClick);
+      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
     };
   }, [theme]);
 

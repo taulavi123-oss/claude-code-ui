@@ -45,7 +45,7 @@ export function ThemePicker({
 
   return (
     <div
-      className="absolute inset-x-0 bottom-full z-20 mb-2 overflow-hidden rounded-xl border border-white/15 bg-[#12100f]/95 text-white shadow-floating backdrop-blur"
+      className="absolute inset-x-0 bottom-full z-20 mb-2 overflow-hidden rounded-xl border border-white/15 bg-[#12100f]/95 text-white shadow-floating"
       data-testid="theme-picker"
     >
       <div className="flex items-center gap-2 px-3 pt-2 pb-1">
