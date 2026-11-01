@@ -7,7 +7,7 @@ import { specOf } from "./keymap.ts";
 import type { CleanupMenu, CleanupRule } from "./tab-cleanup.ts";
 import { timeAgo } from "./sessions.ts";
 import { projectName } from "./tabs.ts";
-import { EFFORT_LABEL, MODE_LABEL, effortOptions } from "./toolbar.tsx";
+import { EFFORT_LABEL, SIMPLE_MODES, effortOptions, simpleOf, simpleTarget } from "./toolbar.tsx";
 
 export type CommandContext = {
   tabs: string[];
@@ -206,7 +206,7 @@ export function appCommands(c: CommandContext): PaletteItem[] {
         "mode.choose",
         "Change permission mode",
         "Choose permission mode",
-        s.modes.map((m) => ({ id: `mode:${m}`, group: "Permission mode", title: MODE_LABEL[m].label, checked: m === s.mode, run: () => c.setMode(m) })),
+        SIMPLE_MODES.filter((m) => m.value !== "auto" || s.modes.includes("auto")).map((m) => ({ id: `mode:${m.value}`, group: "Permission mode", title: m.label, checked: simpleOf(s.mode) === m.value, run: () => c.setMode(simpleTarget(m.value, s.modes)) })),
         // Shown only: Shift+Tab in the prompt box cycles the mode (SessionPane).
         "shift+tab",
       ),

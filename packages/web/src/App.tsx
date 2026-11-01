@@ -2881,6 +2881,7 @@ export function App() {
               {tabs.includes(NEW_TAB) && (
                 <NewSessionTab
                   active={activeId === NEW_TAB && !optimistic[NEW_TAB]?.length}
+                  themed={appTheme !== "none"}
                   projects={projects}
                   worktrees={worktrees}
                   cwd={draftProject}
@@ -2908,7 +2909,7 @@ export function App() {
                 <>
                   {/* The height of the pane tabs row the session card has below lg (28px + the main gap): the prompt does not move when the session shows. */}
                   <div className="h-7 shrink-0 lg:hidden" aria-hidden />
-                  <StartingSession cwd={draftProject} place={worktreeName(draftProject, worktrees)} pending={optimistic[NEW_TAB]} />
+                  <StartingSession cwd={draftProject} place={worktreeName(draftProject, worktrees)} pending={optimistic[NEW_TAB]} themed={appTheme !== "none"} />
                 </>
               )}
               {!(layout.side === "left" && lg) && (
@@ -3467,10 +3468,10 @@ export async function startSession(
 const EMPTY_VIEW = emptySession();
 
 /** The new-session tab while its first prompt creates the session (GH-133): SessionPane's layout with the prompt, Thinking and skeletons. */
-function StartingSession({ cwd, place, pending }: { cwd: string; place?: string; pending: Pending[] }) {
+function StartingSession({ cwd, place, pending, themed = false }: { cwd: string; place?: string; pending: Pending[]; themed?: boolean }) {
   const phone = usePhone();
   return (
-    <div className={`${card} flex-1`} data-testid="starting-session" aria-busy="true">
+    <div className={`${themed ? "bg-transparent" : card} flex-1`} data-testid="starting-session" aria-busy="true">
       {!phone && (
         <header className="relative z-[1] flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 px-4 backdrop-blur-sm" data-testid="session-header">
           <ProjectAvatar cwd={cwd} />
@@ -3496,7 +3497,7 @@ function StartingSession({ cwd, place, pending }: { cwd: string; place?: string;
           </>
         }
       />
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2">
+      <div className="relative mx-auto flex w-full max-w-[680px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2">
         <Skeleton className="h-[104px] w-full rounded-lg" data-testid="prompt-skeleton" />
       </div>
     </div>
@@ -3504,10 +3505,10 @@ function StartingSession({ cwd, place, pending }: { cwd: string; place?: string;
 }
 
 /** The new-session tab's card. Hidden, not unmounted, while another tab is active: it keeps its draft, images, model, mode and effort. */
-export function NewSessionTab({ active, ...props }: { active: boolean } & ComponentProps<typeof NewSession>) {
+export function NewSessionTab({ active, themed = false, ...props }: { active: boolean; themed?: boolean } & ComponentProps<typeof NewSession>) {
   return (
     <Activity mode={active ? "visible" : "hidden"}>
-      <div className={`${card} flex-1 items-center justify-center p-4`} data-testid="new-session-tab">
+      <div className={`${themed ? "bg-transparent" : card} flex flex-1 items-center justify-center p-4`} data-testid="new-session-tab">
         <NewSession {...props} />
       </div>
     </Activity>
@@ -3586,7 +3587,7 @@ export function NewSession({
   useEffect(() => setCommands([]), [cwd]);
 
   return (
-    <div className="flex w-full max-w-[720px] flex-col items-center gap-4">
+    <div className="flex w-full max-w-[680px] flex-col items-center gap-4">
       <div className="w-full">
         <PromptBox
           draftKey={NEW_TAB_DRAFT}
@@ -3971,13 +3972,6 @@ export function SessionPane({
           items={shownItems}
           itemKey={timelineKey}
           reveal={reveal}
-          sticky={(item) => {
-            if (item.kind !== "part" || item.part.type !== "user_text" || (coordinator && item.part.text.startsWith(ORCHESTRATION_NOTICE))) return;
-            const { text } = splitUploads(item.part.text);
-            const n = item.part.images.length;
-            const label = text || `${n} image${n === 1 ? "" : "s"}`;
-            return { label, content: n && text ? `${text} (${n} image${n === 1 ? "" : "s"})` : label };
-          }}
           onJump={() => {
             if (window.matchMedia?.("(pointer: coarse)").matches) return;
             // A permission or question panel replaces the prompt box: its first option or action is the target (a question's Dismiss stops the turn, so it is never first).
@@ -4079,7 +4073,7 @@ export function SessionPane({
       )}
       <div
         ref={dock}
-        className={`relative mx-auto flex w-full max-w-[720px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 ${dockHidden ? "hidden" : ""}`}
+        className={`relative mx-auto flex w-full max-w-[680px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 ${dockHidden ? "hidden" : ""}`}
         data-hidden={dockHidden || undefined}
         onFocus={() => setDockFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setDockFocused(false)}
@@ -4634,7 +4628,7 @@ function PromptBox({
           !
         </span>
       )}
-      <div className="flex items-end gap-1 py-1 pr-1.5 pl-1">
+      <div className="flex items-center gap-1 py-1 pr-1.5 pl-1">
         {!bash && (
           <>
             <button

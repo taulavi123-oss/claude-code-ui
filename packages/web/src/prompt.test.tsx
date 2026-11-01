@@ -347,14 +347,14 @@ const openModes = async ($: (id: string) => HTMLElement | null) => {
   return [...document.querySelectorAll<HTMLElement>("[role=option]")].map((o) => o.textContent);
 };
 
-it("the permission mode picker lists Auto mode and Don't ask (deny unapproved) next to the other modes", async () => {
+it("the permission mode picker lists exactly Build, Plan and Auto", async () => {
   const { $ } = await render({ session: { id: "s1", cwd: "/tmp", state: "idle", model: "sonnet", permissionMode: "default", effort: "default", permissionModes: [...ALL_MODES] } });
-  expect(await openModes($)).toEqual(["Ask before edits", "Edit automatically", "Plan mode", "Auto mode", "Don't ask (deny unapproved)", "Bypass permissions"]);
+  expect(await openModes($)).toEqual(["Build", "Plan", "Auto"]);
 });
 
 it("the picker has no Auto mode when the model does not offer it", async () => {
   const { $ } = await render({ session: { id: "s1", cwd: "/tmp", state: "idle", model: "haiku", permissionMode: "default", effort: "default", permissionModes: ["default", "acceptEdits", "plan", "dontAsk"] } });
-  expect(await openModes($)).not.toContain("Auto mode");
+  expect(await openModes($)).not.toContain("Auto");
 });
 
 it("Shift+Tab goes Plan, Auto mode, Bypass and never stops at Don't ask", async () => {
@@ -366,17 +366,17 @@ it("Shift+Tab goes Plan, Auto mode, Bypass and never stops at Don't ask", async 
   await rerender({ session: { ...session, permissionMode: "auto" } });
   await key(box, { key: "Tab", shiftKey: true });
   expect(onMode).toHaveBeenLastCalledWith("bypassPermissions");
-  // From Don't ask the cycle restarts at Ask.
+  // From the hidden legacy deny mode the cycle continues at Plan.
   await rerender({ session: { ...session, permissionMode: "dontAsk" } });
   await key(box, { key: "Tab", shiftKey: true });
-  expect(onMode).toHaveBeenLastCalledWith("default");
+  expect(onMode).toHaveBeenLastCalledWith("plan");
 });
 
 it("nextMode wraps around; effortOptions lists the model's levels after default", () => {
-  expect(nextMode(["default", "acceptEdits", "plan"], "plan")).toBe("default");
+  expect(nextMode(["default", "acceptEdits", "plan"], "plan")).toBe("acceptEdits");
   expect(nextMode(["default", "acceptEdits", "plan", "bypassPermissions"], "plan")).toBe("bypassPermissions");
   expect(nextMode([...ALL_MODES], "auto")).toBe("bypassPermissions");
-  expect(nextMode(["default", "acceptEdits", "plan", "auto", "dontAsk"], "auto")).toBe("default");
+  expect(nextMode(["default", "acceptEdits", "plan", "auto", "dontAsk"], "auto")).toBe("acceptEdits");
   expect(effortOptions(models, "default")).toEqual(["default", "low", "medium", "high", "max"]);
   expect(effortOptions(models, "haiku")).toEqual([]);
 });

@@ -2,6 +2,24 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.6 - 2026-11-01
+
+- Exactly three modes, everywhere: Build, Plan, Auto. Build is full access
+  (bypassPermissions, or acceptEdits when bypass is off); Plan is read-only
+  planning; Auto lets Claude choose per task. The old Ask, Edit automatically,
+  Don't ask and Bypass entries are gone from the composer, the command palette
+  and Settings > Permissions.
+- Shift+Tab cycles Build -> Plan -> Auto.
+- Clawd is orange with black eyes.
+
+## 0.22.5 - 2026-11-01
+
+- The New session tab and the starting screen are transparent over the
+  wallpaper; before the first message they no longer show an opaque black
+  card. Once a session opens it already used the glass pane.
+- Removed the sticky prompt header that appeared at the top while scrolling
+  a long conversation. The transcript scrolls clean.
+
 ## 0.22.4 - 2026-11-01
 
 - Wallpaper runs at 25 fps with every subject animation intact: koi swim,

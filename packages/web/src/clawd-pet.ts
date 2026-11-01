@@ -237,13 +237,13 @@ export function mountClawd(host: HTMLElement) {
     if (modo !== "casa") box.style.transform = `translate(${x}px, ${y}px) rotate(${ang}rad)`;
   }
 
-  let cor = "#d77757";
+  let cor = "#e0784f";
   let centro = 0;
   let ultimoQ = 0;
   const mede = () => {
     if (!host.offsetParent) return;
     posiciona();
-    cor = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim() || "#d77757";
+    cor = "#e0784f";
     centro = box.getBoundingClientRect().left + CW / 2;
   };
 
@@ -299,7 +299,11 @@ export function mountClawd(host: HTMLElement) {
     const tonto = modo === "tonto";
     for (const [ex, ey] of OLHOS) {
       px(ex, ey);
-      if (ms > piscaAte && !tonto) ctx.clearRect(Math.round(ox + (ex + o) * PW), Math.round(oy + (ey + (modo === "arrastado" ? 0.25 : 0)) * PH), PW, PH);
+      const eyeX = Math.round(ox + (ex + o) * PW);
+      const eyeY = Math.round(oy + (ey + (modo === "arrastado" ? 0.25 : 0)) * PH);
+      ctx.fillStyle = "#141414";
+      if (ms > piscaAte && !tonto) ctx.fillRect(eyeX, eyeY, PW, PH);
+      else ctx.fillRect(eyeX, eyeY + Math.round(PH * 0.42), PW, Math.max(2, Math.round(PH * 0.16)));
     }
 
     for (const [gx, gy] of BRACOS) {

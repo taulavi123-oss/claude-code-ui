@@ -1260,14 +1260,14 @@ it("the new-session tab offers Auto mode only while its model supports it, and l
   try {
     await openNewTab();
     const tab = '[data-testid="new-session-tab"]';
-    expect(await optionsOf(tab)).toEqual(["Ask before edits", "Edit automatically", "Plan mode", "Auto mode", "Don't ask (deny unapproved)"]);
-    await pickOption(`${tab} [data-testid="mode-select"]`, "Auto mode");
-    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Auto mode");
+    expect(await optionsOf(tab)).toEqual(["Build", "Plan", "Auto"]);
+    await pickOption(`${tab} [data-testid="mode-select"]`, "Auto");
+    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Auto");
     expect(el.querySelector('[data-testid="toast"]')).toBeNull();
     await pickOption(`${tab} [data-testid="session-model"]`, "Haiku 4.5");
     expect(el.querySelector('[data-testid="toast"]')?.textContent).toBe("Auto mode not available for Haiku 4.5; switched to Ask");
-    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Ask");
-    expect(await optionsOf(tab)).not.toContain("Auto mode");
+    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Build");
+    expect(await optionsOf(tab)).not.toContain("Auto");
   } finally {
     restore();
   }

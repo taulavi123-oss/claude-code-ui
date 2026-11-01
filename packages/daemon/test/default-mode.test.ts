@@ -10,12 +10,17 @@ describe("permission policy", () => {
     expect(modeForPolicy("ask", withBypass)).toBeUndefined();
   });
 
-  it("auto uses bypassPermissions when the daemon allows it", () => {
-    expect(modeForPolicy("auto", withBypass)).toBe("bypassPermissions");
+  it("build uses bypassPermissions when the daemon allows it", () => {
+    expect(modeForPolicy("build", withBypass)).toBe("bypassPermissions");
   });
 
-  it("auto falls back to acceptEdits without --allow-bypass", () => {
-    expect(modeForPolicy("auto", withoutBypass)).toBe("acceptEdits");
+  it("build falls back to acceptEdits without --allow-bypass", () => {
+    expect(modeForPolicy("build", withoutBypass)).toBe("acceptEdits");
+  });
+
+  it("auto uses Claude's own auto mode when the model supports it", () => {
+    expect(modeForPolicy("auto", withBypass)).toBe("auto");
+    expect(modeForPolicy("auto", withoutBypass)).toBe("default");
   });
 
   it("deny uses dontAsk", () => {

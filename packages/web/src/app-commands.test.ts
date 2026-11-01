@@ -136,15 +136,15 @@ it("model, effort and mode pages mark the current value and set the chosen one",
   expect(c.setMode).toHaveBeenCalledWith("plan");
 });
 
-it("the mode page lists Auto mode and Don't ask (deny unapproved) when the session offers them", () => {
+it("the mode page lists Build, Plan and Auto when the session offers them", () => {
   const c = ctx();
   c.session!.modes = ["default", "acceptEdits", "plan", "auto", "dontAsk"];
   const mode = appCommands(c).find((x) => x.id === "mode.choose")!;
   const titles = "page" in mode ? mode.page.items.map((i) => i.title) : [];
-  expect(titles).toEqual(["Ask before edits", "Edit automatically", "Plan mode", "Auto mode", "Don't ask (deny unapproved)"]);
-  const dontAsk = "page" in mode && mode.page.items.find((i) => i.title.startsWith("Don't ask"))!;
-  dontAsk && "run" in dontAsk && dontAsk.run();
-  expect(c.setMode).toHaveBeenCalledWith("dontAsk");
+  expect(titles).toEqual(["Build", "Plan", "Auto"]);
+  const auto = "page" in mode && mode.page.items.find((i) => i.title === "Auto")!;
+  auto && "run" in auto && auto.run();
+  expect(c.setMode).toHaveBeenCalledWith("auto");
 });
 
 it("rewind lists prompts newest first; hidden while a turn runs, when Stop shows instead", () => {

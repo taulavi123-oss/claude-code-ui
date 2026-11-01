@@ -20,7 +20,7 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-async function render({ failGet = false, group, policy = "ask", modes = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"], daemon = { host: "box" } as { host: string; version?: string; desktopForcedOff?: true } | null, push = { on: false, supported: true, busy: false, error: undefined as string | undefined } }: { failGet?: boolean; group?: string; policy?: "ask" | "auto" | "deny"; modes?: string[]; daemon?: { host: string; version?: string; desktopForcedOff?: true } | null; push?: { on: boolean; supported: boolean; busy: boolean; error: string | undefined } } = {}) {
+async function render({ failGet = false, group, policy = "ask", modes = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"], daemon = { host: "box" } as { host: string; version?: string; desktopForcedOff?: true } | null, push = { on: false, supported: true, busy: false, error: undefined as string | undefined } }: { failGet?: boolean; group?: string; policy?: "build" | "ask" | "plan" | "auto" | "deny"; modes?: string[]; daemon?: { host: string; version?: string; desktopForcedOff?: true } | null; push?: { on: boolean; supported: boolean; busy: boolean; error: string | undefined } } = {}) {
   const toggle = vi.fn();
   localStorage.removeItem("claude-ui.settingsGroup");
   if (group) localStorage.setItem("claude-ui.settingsGroup", group);
@@ -715,8 +715,8 @@ it("list buttons are 44px below md", async () => {
   expect(q(`${id}-input`)!.className).toContain("max-md:h-11");
 });
 
-it("warns when Auto accept cannot use bypass on this daemon", async () => {
-  const { q, pick } = await render({ policy: "auto", modes: ["default", "acceptEdits", "plan", "dontAsk"] });
+it("warns when Build cannot use bypass on this daemon", async () => {
+  const { q, pick } = await render({ policy: "build", modes: ["default", "acceptEdits", "plan", "dontAsk"] });
   await pick("permissions");
   expect(q("settings-permissions-bypass-off")).not.toBeNull();
 });

@@ -13,20 +13,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 /** Claude Code's names for the modes; `short` fits the toolbar on a phone. */
 export const MODE_LABEL: Record<PermissionMode, { label: string; short: string; Icon: typeof ShieldIcon }> = {
-  default: { label: "Ask before edits", short: "Ask", Icon: ShieldIcon },
-  acceptEdits: { label: "Edit automatically", short: "Edits", Icon: FilePenIcon },
-  plan: { label: "Plan mode", short: "Plan", Icon: ListTodoIcon },
-  bypassPermissions: { label: "Bypass permissions", short: "Bypass", Icon: ShieldAlertIcon },
-  auto: { label: "Auto mode", short: "Auto", Icon: ShieldCheckIcon },
-  dontAsk: { label: "Don't ask (deny unapproved)", short: "Don't ask", Icon: ShieldBanIcon },
+  default: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
+  acceptEdits: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
+  plan: { label: "Plan", short: "Plan", Icon: ListTodoIcon },
+  bypassPermissions: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
+  auto: { label: "Auto", short: "Auto", Icon: ShieldCheckIcon },
+  dontAsk: { label: "Auto", short: "Auto", Icon: ShieldCheckIcon },
 };
 
 export const EFFORT_LABEL: Record<Effort, string> = { default: "Default", low: "Low", medium: "Medium", high: "High", xhigh: "Extra high", max: "Max" };
 
 /** Shift+Tab: the next mode in Claude Code's order, wrapping around. Don't ask is only chosen from the picker: a silently denying mode must not be entered by accident. */
 export const nextMode = (modes: PermissionMode[], mode: PermissionMode) => {
-  const cycle: PermissionMode[] = modes.filter((m) => m !== "dontAsk");
-  return cycle[(cycle.indexOf(mode) + 1) % cycle.length] ?? mode;
+  const order: SimpleMode[] = ["build", "plan", "auto"].filter((m): m is SimpleMode => m !== "auto" || modes.includes("auto"));
+  const at = order.indexOf(simpleOf(mode));
+  return simpleTarget(order[(at + 1) % order.length]!, modes);
 };
 
 /** "Default (recommended)" -> "Default model": the picker label on a phone, where the toolbar has no room for the note. Only that note goes; one that names the model (a context size) stays. "Default" alone would read like the effort chooser beside it. */
@@ -109,20 +110,40 @@ export function Chooser<T extends string>({
 }
 
 /** Permission mode chooser: in the prompt toolbar and in the tray of the permission and question panels (GH-145). */
-export function ModePicker({ mode, modes, onMode, className = "shrink-0", shortcut = true, short = false }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string; /** Shift+Tab cycles the mode only in the prompt textarea: the panels pass false. */ shortcut?: boolean; /** One word: the meta row under the composer. */ short?: boolean }) {
-  const all = modes.includes(mode) ? modes : [mode, ...modes];
-  const Mode = MODE_LABEL[mode].Icon;
-  return (
-    <Chooser
-      label={shortcut ? "Permission mode (Shift+Tab)" : "Permission mode"}
-      testId="mode-select"
-      value={mode}
-      onChange={onMode}
-      icon={<Mode className="size-4" />}
-      items={all.map((m) => ({ value: m, label: MODE_LABEL[m].label, trigger: <span><span className={short ? "" : "@2xl:hidden"}>{MODE_LABEL[m].short}</span><span className={short ? "hidden" : "hidden @2xl:inline"}>{MODE_LABEL[m].label}</span></span> }))}
-      className={className}
-    />
-  );
+/** The three working modes the composer offers: Build, Plan, Auto. */
+export const SIMPLE_MODES = [
+  { value: "build", label: "Build" },
+  { value: "plan", label: "Plan" },
+  { value: "auto", label: "Auto" },
+] as const;
+
+export type SimpleMode = (typeof SIMPLE_MODES)[number]["value"];
+
+export const simpleOf = (mode: PermissionMode): SimpleMode =>
+  mode === "plan" ? "plan" : mode === "auto" ? "auto" : "build";
+
+export const simpleTarget = (value: SimpleMode, modes: PermissionMode[]): PermissionMode =>
+  value === "build"
+    ? modes.includes("bypassPermissions")
+      ? "bypassPermissions"
+      : modes.includes("acceptEdits")
+        ? "acceptEdits"
+        : "default"
+    : value === "plan"
+      ? modes.includes("plan")
+        ? "plan"
+        : "default"
+      : modes.includes("auto")
+        ? "auto"
+        : "default";
+
+export function SimpleModePicker({ mode, modes, onMode, className = "shrink-0" }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string }) {
+  const items = SIMPLE_MODES.filter((m) => m.value !== "auto" || modes.includes("auto")).map((m) => ({ value: m.value, label: m.label }));
+  return <Chooser label="Mode" testId="mode-select" value={simpleOf(mode)} onChange={(v) => onMode(simpleTarget(v, modes))} items={items} className={className} />;
+}
+
+export function ModePicker({ mode, modes, onMode, className = "shrink-0" }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string; shortcut?: boolean; short?: boolean }) {
+  return <SimpleModePicker mode={mode} modes={modes} onMode={onMode} className={className} />;
 }
 
 export function PromptToolbar(props: {
@@ -214,7 +235,11 @@ export function PromptToolbar(props: {
           <SettingsChip {...props} models={models} efforts={efforts} effort={effort} modelItems={modelItems} />
         ) : (
           <>
-            <ModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} short={props.metaOnly} />
+            {props.metaOnly ? (
+              <SimpleModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} />
+            ) : (
+              <ModePicker mode={props.mode} modes={props.modes} onMode={props.onMode} />
+            )}
             <Chooser label="Model" testId="session-model" value={props.model} onChange={props.onModel} items={modelItems} className={`max-w-55 ${props.metaOnly ? "ml-auto" : ""}`} />
             {efforts.length > 0 && <EffortPicker efforts={efforts} effort={effort} onEffort={props.onEffort} />}
           </>
@@ -271,7 +296,7 @@ function SettingsChip({ models, model, mode, modes, onMode, onModel, onEffort, e
 
 export type SendState = "idle" | "running" | "needs_input" | "disconnected";
 
-const SEND_BASE = `relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md bg-linear-to-b from-white/20 to-transparent shadow-button-contrast ${FOCUS} disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:size-11 max-md:size-11`;
+const SEND_BASE = `relative flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md bg-linear-to-b from-white/20 to-transparent shadow-button-contrast ${FOCUS} disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:size-11 max-md:size-11`;
 
 /** OpenCode send/stop button plus the session state: spinner while running, warning color while Claude waits for an answer. */
 /** The tooltip above the send button while the box has input and a turn runs: Enter does the setting's action, Alt+Enter the other (none without a queue). A shell command can only queue. */

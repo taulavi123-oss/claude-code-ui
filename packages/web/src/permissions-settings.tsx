@@ -13,24 +13,22 @@ type Props = {
 };
 
 const LABELS: Record<Settings["permissions"]["policy"], string> = {
+  build: "Build",
   ask: "Build",
   plan: "Plan",
-  auto: "Auto accept",
+  auto: "Auto",
   deny: "Deny",
 };
 
 export function PermissionsSection({ permissions, saving, save, bypassAvailable }: Props) {
   const options: { value: Settings["permissions"]["policy"]; title: string; hint: string }[] = [
-    { value: "ask", title: "Build", hint: "Claude builds in the session, prompting before it edits files or runs commands." },
-    { value: "plan", title: "Plan", hint: "Claude writes a plan first and waits for approval; it does not edit files or run commands." },
+    { value: "build", title: "Build", hint: "Full access: edits, commands and bypass permissions inside this container." },
+    { value: "plan", title: "Plan", hint: "Read-only planning: Claude writes a plan and waits; it does not edit files or run commands." },
     {
       value: "auto",
-      title: "Auto accept",
-      hint: bypassAvailable === false
-        ? "Bypass is off on this daemon, so edits are accepted but commands still ask."
-        : "No prompts: edits and commands run as bypassPermissions inside this container.",
+      title: "Auto",
+      hint: "Claude chooses the mode for each task: plan for research, build for edits and commands.",
     },
-    { value: "deny", title: "Deny", hint: "Anything that would need a prompt is refused (dontAsk)." },
   ];
 
   return (
@@ -55,9 +53,9 @@ export function PermissionsSection({ permissions, saving, save, bypassAvailable 
           );
         })}
       </div>
-      {permissions.policy === "auto" && bypassAvailable === false && (
+      {permissions.policy === "build" && bypassAvailable === false && (
         <span className="text-xs text-destructive" data-testid="settings-permissions-bypass-off">
-          The daemon runs without --allow-bypass, so Auto accept falls back to accepting edits only. Add
+          The daemon runs without --allow-bypass, so Build falls back to accepting edits; commands still ask. Add
           CLAUDE_UI_ALLOW_BYPASS=1 to vip.env and restart the server.
         </span>
       )}
