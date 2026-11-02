@@ -10,13 +10,13 @@ export const nextPref = (p: ThemePref): ThemePref => (p === "system" ? "light" :
 export function loadPref(): ThemePref {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "light" || v === "dark" ? v : "system";
+    return v === "light" ? "light" : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 
-/** Sets `.dark` on <html>; with "system" it follows OS changes until the next call. Returns the stop function. */
+/** Sets `.dark` on <html>; "system" also resolves to dark, the app's default. Returns the stop function. */
 export function applyTheme(pref: ThemePref) {
   try {
     localStorage.setItem(KEY, pref);
@@ -25,12 +25,12 @@ export function applyTheme(pref: ThemePref) {
   }
   const mq = query();
   const set = () => {
-    const dark = pref === "dark" || (pref === "system" && mq.matches);
+    const dark = pref !== "light";
     document.documentElement.classList.toggle("dark", dark);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#080808" : "#fafafa");
   };
   set();
-  if (pref !== "system") return () => {};
+  if (pref === "light") return () => {};
   mq.addEventListener("change", set);
   return () => mq.removeEventListener("change", set);
 }

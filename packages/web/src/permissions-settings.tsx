@@ -24,18 +24,13 @@ export function PermissionsSection({ permissions, saving, save, bypassAvailable 
   const options: { value: Settings["permissions"]["policy"]; title: string; hint: string }[] = [
     { value: "build", title: "Build", hint: "Full access: edits, commands and bypass permissions inside this container." },
     { value: "plan", title: "Plan", hint: "Read-only planning: Claude writes a plan and waits; it does not edit files or run commands." },
-    {
-      value: "auto",
-      title: "Auto",
-      hint: "Claude chooses the mode for each task: plan for research, build for edits and commands.",
-    },
   ];
 
   return (
     <section className="flex flex-col gap-3" data-testid="settings-permissions">
       <div role="radiogroup" aria-label="Permission mode" className="flex flex-col gap-2" data-testid="settings-permissions-policy">
         {options.map((option) => {
-          const active = (permissions.policy === "ask" ? "build" : permissions.policy) === option.value;
+          const active = (permissions.policy === "plan" ? "plan" : "build") === option.value;
           return (
             <button
               key={option.value}

@@ -27,7 +27,7 @@ import { KeyTipsRow } from "./key-tip.tsx";
 import {
   ActivityIcon, BellIcon, ChevronLeftIcon, CompassIcon, CpuIcon, GaugeIcon,
   GitBranchIcon, GitCompareIcon, InfoIcon, KeyboardIcon, MonitorIcon,
-  PanelLeftIcon, PlugIcon, SendIcon, ShieldCheckIcon, SparklesIcon, SquareStackIcon,
+  PanelLeftIcon, PlugIcon, SendIcon, ServerIcon, ShieldCheckIcon, SparklesIcon, SquareStackIcon,
   TerminalIcon, TicketIcon, WorkflowIcon, type LucideIcon,
 } from "lucide-react";
 import { ListSetting } from "./list-setting.tsx";
@@ -49,6 +49,7 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
   tabs: SquareStackIcon,
   keyboard: KeyboardIcon,
   skills: SparklesIcon,
+  mcp: ServerIcon,
   guide: CompassIcon,
   orchestration: WorkflowIcon,
   usageLimit: GaugeIcon,
@@ -71,6 +72,7 @@ const GROUP_HINTS: Record<string, string> = {
   tabs: "Tab grouping and when old tabs close.",
   keyboard: "See and rebind every shortcut.",
   skills: "Turn the project's skills on or off, and see what each one costs.",
+  mcp: "Enable or disable the project's MCP servers.",
   guide: "Replay the guided tour.",
   orchestration: "Let sessions start and supervise worker sessions.",
   usageLimit: "What happens when the plan's usage limit resets.",
@@ -318,7 +320,7 @@ const SECTIONS: { id: keyof Settings; title: string; rows: Row[] }[] = [
 export type PushUi = { on: boolean; supported: boolean; busy: boolean; error?: string; toggle: () => void };
 
 /** `changed`: bumped when another client changed the settings (reloads them). */
-export function SettingsDialog({ open, changed = 0, request, onClose, tabGrouping, onTabGrouping, tabCompact = false, onTabCompact, tabAutoClose = "off", onTabAutoClose, onShortcuts, onRestartGuide, onSkills, push }: { tabAutoClose?: AutoClose; onTabAutoClose?: (v: AutoClose) => void; push?: PushUi; open: boolean; changed?: number; request: <T>(msg: Request) => Promise<T>; onClose: () => void; tabGrouping?: TabGrouping; onTabGrouping?: (g: TabGrouping) => void; tabCompact?: boolean; onTabCompact?: (on: boolean) => void; onShortcuts?: () => void; onRestartGuide?: () => void; /** Opens the Skills center for the shown project. */ onSkills?: () => void }) {
+export function SettingsDialog({ open, changed = 0, request, onClose, tabGrouping, onTabGrouping, tabCompact = false, onTabCompact, tabAutoClose = "off", onTabAutoClose, onShortcuts, onRestartGuide, onSkills, onMcp, push }: { tabAutoClose?: AutoClose; onTabAutoClose?: (v: AutoClose) => void; push?: PushUi; open: boolean; changed?: number; request: <T>(msg: Request) => Promise<T>; onClose: () => void; tabGrouping?: TabGrouping; onTabGrouping?: (g: TabGrouping) => void; tabCompact?: boolean; onTabCompact?: (on: boolean) => void; onShortcuts?: () => void; onRestartGuide?: () => void; /** Opens the Skills manager for the shown project. */ onSkills?: () => void; /** Opens the MCP manager for the shown project. */ onMcp?: () => void }) {
   const [settings, setSettings] = useState<Settings>();
   const [error, setError] = useState<string>();
   const [daemon, setDaemon] = useState<SettingsResult["daemon"]>();
@@ -675,14 +677,37 @@ export function SettingsDialog({ open, changed = 0, request, onClose, tabGroupin
               <section aria-label="Skills" className="flex flex-col" data-testid="settings-skills">
                 <div className="flex items-center gap-3 py-1 max-md:min-h-11">
                   <div className="min-w-0 flex-1">
-                    <span id="settings-skills-label" className="block text-sm">Skills center</span>
+                    <span id="settings-skills-label" className="block text-sm">Skills</span>
                     <span id="settings-skills-hint" className="block text-muted-foreground text-xs">
-                      Every command of this project, and for skills their source and token cost. Turn one on or off, name-only or
-                      user-only.
+                      Turn this project's skills on or off. A skill that is off is not offered to Claude and does not appear in
+                      the command list.
                     </span>
                   </div>
                   <button type="button" onClick={onSkills} aria-describedby="settings-skills-hint" className="h-8 cursor-pointer rounded-md border px-3 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring max-md:h-11" data-testid="settings-open-skills">
-                    Open
+                    Manage
+                  </button>
+                </div>
+              </section>
+            ),
+          },
+        ]
+      : []),
+    ...(onMcp
+      ? [
+          {
+            id: "mcp",
+            title: "MCP",
+            body: (
+              <section aria-label="MCP" className="flex flex-col" data-testid="settings-mcp">
+                <div className="flex items-center gap-3 py-1 max-md:min-h-11">
+                  <div className="min-w-0 flex-1">
+                    <span id="settings-mcp-label" className="block text-sm">MCP servers</span>
+                    <span id="settings-mcp-hint" className="block text-muted-foreground text-xs">
+                      Enable or disable this project's MCP servers. A disabled server is not started for Claude.
+                    </span>
+                  </div>
+                  <button type="button" onClick={onMcp} aria-describedby="settings-mcp-hint" className="h-8 cursor-pointer rounded-md border px-3 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring max-md:h-11" data-testid="settings-open-mcp">
+                    Manage
                   </button>
                 </div>
               </section>

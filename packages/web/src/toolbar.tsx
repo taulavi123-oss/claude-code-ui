@@ -11,23 +11,21 @@ import { ContextMeter } from "./context-meter.tsx";
 import type { Totals } from "./status-bar.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-/** Claude Code's names for the modes; `short` fits the toolbar on a phone. */
+/** Claude Code's names for the modes; `short` fits the toolbar on a phone. Two working modes: Build, Plan. */
 export const MODE_LABEL: Record<PermissionMode, { label: string; short: string; Icon: typeof ShieldIcon }> = {
   default: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
   acceptEdits: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
   plan: { label: "Plan", short: "Plan", Icon: ListTodoIcon },
   bypassPermissions: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
-  auto: { label: "Auto", short: "Auto", Icon: ShieldCheckIcon },
-  dontAsk: { label: "Auto", short: "Auto", Icon: ShieldCheckIcon },
+  auto: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
+  dontAsk: { label: "Build", short: "Build", Icon: ShieldCheckIcon },
 };
 
 export const EFFORT_LABEL: Record<Effort, string> = { default: "Default", low: "Low", medium: "Medium", high: "High", xhigh: "Extra high", max: "Max" };
 
-/** Shift+Tab: the next mode in Claude Code's order, wrapping around. Don't ask is only chosen from the picker: a silently denying mode must not be entered by accident. */
+/** Shift+Tab: the next of the two modes, wrapping around. */
 export const nextMode = (modes: PermissionMode[], mode: PermissionMode) => {
-  const order: SimpleMode[] = (["build", "plan", "auto"] as SimpleMode[]).filter(
-    (m) => m === "build" || modes.includes(m === "plan" ? "plan" : "auto"),
-  );
+  const order: SimpleMode[] = (["build", "plan"] as SimpleMode[]).filter((m) => m === "build" || modes.includes("plan"));
   const at = order.indexOf(simpleOf(mode));
   return simpleTarget(order[(at + 1) % order.length]!, modes);
 };
@@ -115,17 +113,15 @@ export function Chooser<T extends string>({
 }
 
 /** Permission mode chooser: in the prompt toolbar and in the tray of the permission and question panels (GH-145). */
-/** The three working modes the composer offers: Build, Plan, Auto. */
+/** The two working modes the composer offers: Build, Plan. */
 export const SIMPLE_MODES = [
   { value: "build", label: "Build" },
   { value: "plan", label: "Plan" },
-  { value: "auto", label: "Auto" },
 ] as const;
 
 export type SimpleMode = (typeof SIMPLE_MODES)[number]["value"];
 
-export const simpleOf = (mode: PermissionMode): SimpleMode =>
-  mode === "plan" ? "plan" : mode === "auto" ? "auto" : "build";
+export const simpleOf = (mode: PermissionMode): SimpleMode => (mode === "plan" ? "plan" : "build");
 
 export const simpleTarget = (value: SimpleMode, modes: PermissionMode[]): PermissionMode =>
   value === "build"
@@ -134,16 +130,12 @@ export const simpleTarget = (value: SimpleMode, modes: PermissionMode[]): Permis
       : modes.includes("acceptEdits")
         ? "acceptEdits"
         : "default"
-    : value === "plan"
-      ? modes.includes("plan")
-        ? "plan"
-        : "default"
-      : modes.includes("auto")
-        ? "auto"
-        : "default";
+    : modes.includes("plan")
+      ? "plan"
+      : "default";
 
 export function SimpleModePicker({ mode, modes, onMode, className = "shrink-0" }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string }) {
-  const items = SIMPLE_MODES.filter((m) => m.value !== "auto" || modes.includes("auto")).map((m) => ({ value: m.value, label: m.label }));
+  const items = SIMPLE_MODES.filter((m) => m.value === "build" || modes.includes("plan")).map((m) => ({ value: m.value, label: m.label }));
   // `reapply`: the chip reads Build for acceptEdits/default too, so picking Build again
   // must still send bypassPermissions; the plain value comparison would drop it.
   return <Chooser label="Mode" testId="mode-select" value={simpleOf(mode)} onChange={(v) => onMode(simpleTarget(v, modes))} items={items} className={className} reapply />;

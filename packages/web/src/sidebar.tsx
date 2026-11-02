@@ -3,7 +3,7 @@ import { SideBadge, SideLabel } from "./sides.tsx";
 import { Fragment, memo, use, useEffect, useRef, useState } from "react";
 import { useNarrow } from "@/lib/use-narrow.ts";
 import { Menu } from "@base-ui/react/menu";
-import { ArchiveIcon, ChevronDownIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LocateFixedIcon, LockIcon, PlusIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
+import { ArchiveIcon, ChevronRightIcon, ChevronsDownUpIcon, ChevronsUpDownIcon, CircleAlertIcon, EllipsisVerticalIcon, FolderPlusIcon, GitBranchIcon, GitBranchPlusIcon, LoaderCircleIcon, LocateFixedIcon, LockIcon, SearchIcon, SquarePenIcon, Trash2Icon, UsersIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionListItem, SessionState, Worktree } from "@claude-ui/protocol";
 import { cn, useStableProps } from "@/lib/utils";
@@ -465,11 +465,8 @@ export function SessionList({
   const treeHint = searching ? " (clear the search first)" : "";
   const header = (
     <div className="flex h-7 items-center pl-1.5 max-md:h-11">
-      <h2 className="flex min-w-0 flex-1 items-center gap-1 truncate font-medium text-[13px] text-foreground/90 tracking-wide">
-        Pinned
-        <ChevronDownIcon className="size-3 text-muted-foreground" aria-hidden />
-      </h2>
-      <div className="flex shrink-0 items-center gap-0.5">
+      <h2 className="sr-only">Sessions</h2>
+      <div className="ml-auto flex shrink-0 items-center gap-0.5">
         <IconButton label="Open project" onClick={onOpenProject} testId="open-project">
           <FolderPlusIcon />
         </IconButton>
@@ -541,12 +538,6 @@ export function SessionList({
         </p>
       )}
       <nav className="-mx-1 flex min-h-0 flex-col gap-2 overflow-y-auto px-1" aria-label="Sessions" data-testid="session-list" ref={listRef}>
-        {!archived && !!groups.length && (
-          <p className="flex items-center gap-1 px-1.5 pb-0.5 text-muted-foreground text-xs" data-testid="pinned-caption">
-            Pinned
-            <ChevronDownIcon className="size-3" aria-hidden />
-          </p>
-        )}
         {archived && !!groups.length && (
           <p className="px-1.5 text-muted-foreground text-xs" data-testid="archived-caption">
             Archived sessions
@@ -668,30 +659,6 @@ export function SessionList({
           );
         })}
       </nav>
-      <div className="flex items-center gap-2 px-1.5 pt-1 text-[13px] text-muted-foreground" data-testid="studio-row">
-        <span className="min-w-0 flex-1 truncate">Studio</span>
-        <ChevronDownIcon className="size-3" aria-hidden />
-        <button
-          type="button"
-          onClick={onOpenProject}
-          aria-label="Add project"
-          title="Add project"
-          className="grid size-5 shrink-0 cursor-pointer place-items-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          data-testid="studio-add"
-        >
-          <PlusIcon className="size-3.5" aria-hidden />
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={() => setArchived(!archived)}
-        className="flex h-8 w-full shrink-0 items-center gap-2 rounded-md px-1.5 text-left text-[13px] text-muted-foreground outline-none transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        data-testid="sketches"
-        aria-pressed={archived}
-      >
-        <span className="min-w-0 flex-1 truncate">Sketches</span>
-        <span className="text-[11px] text-faint">{archived ? "shown" : ""}</span>
-      </button>
     </div>
   );
 }

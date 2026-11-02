@@ -30,6 +30,7 @@ async function render({ failGet = false, group, policy = "ask", modes = ["defaul
   const onTabAutoClose = vi.fn();
   const onShortcuts = vi.fn();
   const onSkills = vi.fn();
+  const onMcp = vi.fn();
   let settings: Settings = { orchestration: { enabled: false, workerCap: 4, maxDepth: 2, maxChildren: 4, coordinatorPermissions: true, workerMode: "coordinator", workerNotifications: true }, usageLimit: { autoContinue: false }, notifications: { desktop: true }, provider: { mode: "env", baseUrl: "", model: "", models: "", contextWindow: 1000000, maxOutputTokens: 64000 }, permissions: { policy, maxSessions: 0 }, performance: { monitor: true }, jira: { url: "", email: "", template: "{type}/{key}-{summary}", jql: "" }, git: { autoRepositoryDetection: true, repositoryScanMaxDepth: 1, repositoryScanIgnoredFolders: ["node_modules"], scanRepositories: [], ignoredRepositories: [], detectSubmodules: true, detectSubmodulesLimit: 10, ignoreSubmodules: false, openRepositoryInParentFolders: "always" } };
   let refuse: string | undefined;
   const calls: Request[] = [];
@@ -63,6 +64,7 @@ async function render({ failGet = false, group, policy = "ask", modes = ["defaul
         open={open}
         onShortcuts={onShortcuts}
         onSkills={onSkills}
+        onMcp={onMcp}
         push={{ ...push, toggle }}
         request={request as never}
         onClose={() => set(false)}
@@ -285,7 +287,7 @@ it("shows a Guide section whose Restart guide button calls onRestartGuide", asyn
 it("lists the groups: Timeline first, Guide after Tabs, the daemon's groups last", async () => {
   const { q } = await render();
   const ids = [...document.querySelectorAll('[role=tab]')].map((t) => t.textContent);
-  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Tabs", "Keyboard", "Skills", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Provider", "Permissions", "Jira", "About"]);
+  expect(ids).toEqual(["Timeline", "Sending", "Notifications", "Screen", "Changes", "Sidebar", "Tabs", "Keyboard", "Skills", "MCP", "Guide", "Orchestration", "Usage limits", "Performance", "Git", "Provider", "Permissions", "Jira", "About"]);
   expect(q("settings-groups")?.getAttribute("role")).toBe("tablist");
 });
 
@@ -721,8 +723,8 @@ it("warns when Build cannot use bypass on this daemon", async () => {
   expect(q("settings-permissions-bypass-off")).not.toBeNull();
 });
 
-it("offers Auto accept without a warning when the daemon allows bypass", async () => {
-  const { q, pick } = await render({ policy: "auto" });
+it("offers Build without a warning when the daemon allows bypass", async () => {
+  const { q, pick } = await render({ policy: "build" });
   await pick("permissions");
   expect(q("settings-permissions-bypass-off")).toBeNull();
 });

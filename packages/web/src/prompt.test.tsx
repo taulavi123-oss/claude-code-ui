@@ -166,7 +166,7 @@ it("Shift+Tab cycles the permission mode like Claude Code, also while the picker
   await type(box, "/");
   expect(box.getAttribute("aria-expanded")).toBe("true");
   await key(box, { key: "Tab", shiftKey: true });
-  expect(onMode).toHaveBeenLastCalledWith("auto");
+  expect(onMode).toHaveBeenLastCalledWith("acceptEdits");
 });
 
 it("Shift+Tab sends nothing when no other mode is known", async () => {
@@ -350,9 +350,9 @@ const openModes = async ($: (id: string) => HTMLElement | null) => {
   return [...document.querySelectorAll<HTMLElement>("[role=option]")].map((o) => o.textContent);
 };
 
-it("the permission mode picker lists exactly Build, Plan and Auto", async () => {
+it("the permission mode picker lists exactly Build and Plan", async () => {
   const { $ } = await render({ session: { id: "s1", cwd: "/tmp", state: "idle", model: "sonnet", permissionMode: "default", effort: "default", permissionModes: [...ALL_MODES] } });
-  expect(await openModes($)).toEqual(["Build", "Plan", "Auto"]);
+  expect(await openModes($)).toEqual(["Build", "Plan"]);
 });
 
 it("picking Build again upgrades a legacy acceptEdits session to bypass", async () => {
@@ -366,20 +366,15 @@ it("picking Build again upgrades a legacy acceptEdits session to bypass", async 
   expect(onMode).toHaveBeenLastCalledWith("bypassPermissions");
 });
 
-it("the picker has no Auto mode when the model does not offer it", async () => {
-  const { $ } = await render({ session: { id: "s1", cwd: "/tmp", state: "idle", model: "haiku", permissionMode: "default", effort: "default", permissionModes: ["default", "acceptEdits", "plan", "dontAsk"] } });
-  expect(await openModes($)).not.toContain("Auto");
-});
-
-it("Shift+Tab goes Plan, Auto mode, Bypass and never stops at Don't ask", async () => {
+it("Shift+Tab alternates Build and Plan, and starts from a legacy mode at Plan", async () => {
   const onMode = vi.fn();
   const session = { id: "s1", cwd: "/tmp", state: "idle" as const, model: "sonnet", permissionMode: "plan" as const, effort: "default" as const, permissionModes: [...ALL_MODES] };
   const { box, rerender } = await render({ onMode, session });
   await key(box, { key: "Tab", shiftKey: true });
-  expect(onMode).toHaveBeenLastCalledWith("auto");
-  await rerender({ session: { ...session, permissionMode: "auto" } });
-  await key(box, { key: "Tab", shiftKey: true });
   expect(onMode).toHaveBeenLastCalledWith("bypassPermissions");
+  await rerender({ session: { ...session, permissionMode: "bypassPermissions" } });
+  await key(box, { key: "Tab", shiftKey: true });
+  expect(onMode).toHaveBeenLastCalledWith("plan");
   // From the hidden legacy deny mode the cycle continues at Plan.
   await rerender({ session: { ...session, permissionMode: "dontAsk" } });
   await key(box, { key: "Tab", shiftKey: true });
@@ -389,8 +384,8 @@ it("Shift+Tab goes Plan, Auto mode, Bypass and never stops at Don't ask", async 
 it("nextMode wraps around; effortOptions lists the model's levels after default", () => {
   expect(nextMode(["default", "acceptEdits", "plan"], "plan")).toBe("acceptEdits");
   expect(nextMode(["default", "acceptEdits", "plan", "bypassPermissions"], "plan")).toBe("bypassPermissions");
-  expect(nextMode([...ALL_MODES], "auto")).toBe("bypassPermissions");
-  expect(nextMode(["default", "acceptEdits", "plan", "auto", "dontAsk"], "auto")).toBe("acceptEdits");
+  expect(nextMode([...ALL_MODES], "auto")).toBe("plan");
+  expect(nextMode(["default", "acceptEdits", "plan", "auto", "dontAsk"], "auto")).toBe("plan");
   expect(effortOptions(models, "default")).toEqual(["default", "low", "medium", "high", "max"]);
   expect(effortOptions(models, "haiku")).toEqual([]);
 });

@@ -1,6 +1,6 @@
 // Settings › Provider: opt-in Anthropic-compatible API mode. The key is write-only (secrets.json); this page only learns
 // whether one is saved. Subscription and env modes keep the previous behavior.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LoaderCircleIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import type { ProviderModelsResult, ProviderTestResult, Settings, SettingsPatch, SettingsResult } from "@claude-ui/protocol";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
   const [replacing, setReplacing] = useState(false);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
-  const [test, setTest] = useState<{ ok: boolean; text: string }>();
+  const [test, setTest] = useState<{ ok: boolean; text: string; models?: { model: string; ok: boolean; latencyMs?: number; error?: string }[] }>();
   const [models, setModels] = useState<string[]>(() => splitModels(provider.models));
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string>();
@@ -51,6 +51,18 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
     setTest(undefined);
     void save({ provider: { [k]: n } as never }).then(() => setDraft(({ [k]: _, ...rest }) => rest));
   };
+  // A field still focused when the dialog closes never blurs: flush it on unmount.
+  const pending = useRef(draft);
+  pending.current = draft;
+  useEffect(
+    () => () => {
+      for (const k of ["baseUrl", "model"] as const) {
+        const v = pending.current[k];
+        if (v !== undefined) void save({ provider: { [k]: v.trim() } as never });
+      }
+    },
+    [],
+  );
   const field = (k: "baseUrl" | "model" | "models", label: string, hint: string, placeholder?: string) => (
     <label className={ROW}>
       <span className="text-sm">{label}</span>
@@ -111,7 +123,7 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
     setTest(undefined);
     try {
       const r = await request<ProviderTestResult>({ type: "provider.test" });
-      setTest({ ok: true, text: `${r.model} answered in ${r.latencyMs} ms` });
+      setTest({ ok: true, text: `${r.model} answered in ${r.latencyMs} ms`, models: r.models });
     } catch (e) {
       setTest({ ok: false, text: (e as Error).message });
     } finally {
@@ -328,6 +340,21 @@ export function ProviderSection({ provider, keySet, saving, save, request, onRes
               </span>
             )}
           </div>
+          {!!test?.models?.length && (
+            <ul className="flex flex-col gap-1 text-xs" data-testid="settings-provider-test-models">
+              {test.models.map((m) => (
+                <li key={m.model} className="flex items-start gap-2 font-mono">
+                  <span className={m.ok ? "text-success" : "text-destructive"} aria-hidden>
+                    {m.ok ? "✓" : "✗"}
+                  </span>
+                  <span className="min-w-0 flex-1 break-all">
+                    {m.model}
+                    <span className="ml-2 font-sans text-muted-foreground">{m.ok ? `${m.latencyMs} ms` : m.error}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </>
       )}
     </section>

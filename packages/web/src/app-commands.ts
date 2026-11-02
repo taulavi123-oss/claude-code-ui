@@ -206,7 +206,7 @@ export function appCommands(c: CommandContext): PaletteItem[] {
         "mode.choose",
         "Change permission mode",
         "Choose permission mode",
-        SIMPLE_MODES.filter((m) => m.value !== "auto" || s.modes.includes("auto")).map((m) => ({ id: `mode:${m.value}`, group: "Permission mode", title: m.label, checked: simpleOf(s.mode) === m.value, run: () => c.setMode(simpleTarget(m.value, s.modes)) })),
+        SIMPLE_MODES.filter((m) => m.value === "build" || s.modes.includes("plan")).map((m) => ({ id: `mode:${m.value}`, group: "Permission mode", title: m.label, checked: simpleOf(s.mode) === m.value, run: () => c.setMode(simpleTarget(m.value, s.modes)) })),
         // Shown only: Shift+Tab in the prompt box cycles the mode (SessionPane).
         "shift+tab",
       ),

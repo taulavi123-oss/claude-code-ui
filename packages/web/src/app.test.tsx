@@ -1215,27 +1215,6 @@ const optionsOf = async (scope: string) => {
   return names;
 };
 
-it("a session in auto mode that gets a model without auto support is in Ask, and a toast says why", async () => {
-  const auto = { ...session, model: "sonnet", permissionMode: "auto", permissionModes: [...MODES] };
-  const restore = await remount({
-    "session.list": { sessions: [auto], projects: ["/p/demo"] },
-    "session.subscribe": { logEpoch: "e1", session: auto },
-    "models.list": { models: AUTO_MODELS },
-    "session.setModel": { session: { ...auto, model: "haiku", permissionMode: "default", permissionModes: ["default", "acceptEdits", "plan", "dontAsk"] } },
-  });
-  try {
-    expect(el.querySelector('[data-testid="toast"]')).toBeNull();
-    await pickOption('[data-testid="session-model"]', "Haiku 4.5");
-    // The daemon's session_model and session_permission_mode events (the log tells every tab).
-    await act(async () => emit({ type: "event", sessionId: ID, seq: 1, part: { type: "session_model", id: "session_model", model: "haiku" } }));
-    await act(async () => emit({ type: "event", sessionId: ID, seq: 2, part: { type: "session_permission_mode", id: "session_permission_mode", mode: "default" } }));
-    expect(el.querySelector('[data-testid="toast"]')?.textContent).toBe("Auto mode not available for Haiku 4.5; switched to Ask");
-    expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Ask");
-  } finally {
-    restore();
-  }
-});
-
 it("a model change in another mode shows no toast", async () => {
   const plan = { ...session, model: "sonnet", permissionMode: "plan", permissionModes: [...MODES] };
   const restore = await remount({
@@ -1252,50 +1231,29 @@ it("a model change in another mode shows no toast", async () => {
   }
 });
 
-it("the new-session tab offers Auto mode only while its model supports it, and leaving auto shows the toast", async () => {
-  const restore = await remount({
-    "session.list": { sessions: [session], projects: ["/p/demo"], permissionModes: ["default", "acceptEdits", "plan", "auto", "dontAsk"] },
-    "models.list": { models: [{ ...AUTO_MODELS[0]!, value: "default", displayName: "Default (recommended)" }, AUTO_MODELS[1]!] },
-  });
-  try {
-    await openNewTab();
-    const tab = '[data-testid="new-session-tab"]';
-    expect(await optionsOf(tab)).toEqual(["Build", "Plan", "Auto"]);
-    await pickOption(`${tab} [data-testid="mode-select"]`, "Auto");
-    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Auto");
-    expect(el.querySelector('[data-testid="toast"]')).toBeNull();
-    await pickOption(`${tab} [data-testid="session-model"]`, "Haiku 4.5");
-    expect(el.querySelector('[data-testid="toast"]')?.textContent).toBe("Auto mode not available for Haiku 4.5; switched to Ask");
-    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Build");
-    expect(await optionsOf(tab)).not.toContain("Auto");
-  } finally {
-    restore();
-  }
-});
-
 it("the new-session tab preselects the mode the daemon reports for its project; a picked mode stays", async () => {
   const restore = await remount({
     "session.list": { sessions: [session], projects: ["/p/demo"], permissionModes: ["default", "acceptEdits", "plan", "auto", "dontAsk"] },
     "models.list": { models: [{ ...AUTO_MODELS[0]!, value: "default", displayName: "Default (recommended)" }, AUTO_MODELS[1]!] },
-    "session.defaultMode": { mode: "auto" },
+    "session.defaultMode": { mode: "plan" },
   });
   try {
     sent.length = 0;
     await openNewTab();
     const select = '[data-testid="new-session-tab"] [data-testid="mode-select"]';
     expect(sent).toContainEqual({ type: "session.defaultMode", cwd: "/p/demo" });
-    expect(el.querySelector(select)?.textContent).toContain("Auto mode");
-    await pickOption(select, "Plan mode");
-    expect(el.querySelector(select)?.textContent).toContain("Plan mode");
+    expect(el.querySelector(select)?.textContent).toContain("Plan");
+    await pickOption(select, "Build");
+    expect(el.querySelector(select)?.textContent).toContain("Build");
     await pickOption('[data-testid="new-session-tab"] [data-testid="session-model"]', "Haiku 4.5");
-    // Picked Plan stays; the model change does not bring the settings mode back.
-    expect(el.querySelector(select)?.textContent).toContain("Plan mode");
+    // Picked Build stays; the model change does not bring the settings mode back.
+    expect(el.querySelector(select)?.textContent).toContain("Build");
   } finally {
     restore();
   }
 });
 
-it("the new-session tab shows Ask when a project's default mode (auto) arrives for a model without auto", async () => {
+it("the new-session tab shows Build when a project's legacy default mode arrives for a model without auto", async () => {
   const restore = await remount({
     "session.list": { sessions: [session, { ...session, id: "other", cwd: "/p/other" }], projects: ["/p/demo", "/p/other"], permissionModes: ["default", "acceptEdits", "plan", "auto", "dontAsk"] },
     "models.list": { models: [{ ...AUTO_MODELS[0]!, value: "default", displayName: "Default (recommended)" }, AUTO_MODELS[1]!] },
@@ -1308,33 +1266,15 @@ it("the new-session tab shows Ask when a project's default mode (auto) arrives f
     await pickOption(`${tab} [data-testid="project-chip"]`, "Oother/p/other");
     await act(async () => new Promise((r) => setTimeout(r, 50)));
     expect(sent).toContainEqual({ type: "session.defaultMode", cwd: "/p/other" });
-    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Ask");
+    expect(el.querySelector(`${tab} [data-testid="mode-select"]`)?.textContent).toContain("Build");
   } finally {
     restore();
   }
 });
 
-it("the new-session tab starts in Ask when the daemon reports no default mode", async () => {
+it("the new-session tab starts in Build when the daemon reports no default mode", async () => {
   await openNewTab();
-  expect(el.querySelector('[data-testid="new-session-tab"] [data-testid="mode-select"]')?.textContent).toContain("Ask");
-});
-
-it("another client that gets only the session_model part follows the model's permission modes", async () => {
-  const sonnet = { ...session, model: "sonnet", permissionMode: "default", permissionModes: [...MODES] };
-  const restore = await remount({
-    "session.list": { sessions: [sonnet], projects: ["/p/demo"] },
-    "session.subscribe": { logEpoch: "e1", session: sonnet },
-    "models.list": { models: AUTO_MODELS },
-  });
-  try {
-    expect(await optionsOf("*")).toContain("Auto mode");
-    await act(async () => emit({ type: "event", sessionId: ID, seq: 1, part: { type: "session_model", id: "session_model", model: "haiku" } }));
-    expect(await optionsOf("*")).not.toContain("Auto mode");
-    await act(async () => emit({ type: "event", sessionId: ID, seq: 2, part: { type: "session_model", id: "session_model", model: "sonnet" } }));
-    expect(await optionsOf("*")).toContain("Auto mode");
-  } finally {
-    restore();
-  }
+  expect(el.querySelector('[data-testid="new-session-tab"] [data-testid="mode-select"]')?.textContent).toContain("Build");
 });
 
 it("with no added project: empty state, and the Open project dialog adds a recent project in one click", async () => {
@@ -1709,42 +1649,13 @@ it("a link to an open session opens it at the bottom: the timeline remounts, lik
   expect(log()).not.toBe(before);
 });
 
-it("a session opened in Don't ask that goes to Auto mode with Shift+Tab and then gets a model without auto support ends in Ask: the picker sends no mode the user did not pick", async () => {
-  const dontAsk = { ...session, model: "sonnet", permissionMode: "dontAsk", permissionModes: [...MODES] };
-  const restore = await remount({
-    "session.list": { sessions: [dontAsk], projects: ["/p/demo"] },
-    "session.subscribe": { logEpoch: "e1", session: dontAsk },
-    "models.list": { models: AUTO_MODELS },
-    "session.setPermissionMode": { session: dontAsk },
-    "session.setModel": { session: { ...dontAsk, model: "haiku", permissionMode: "default", permissionModes: ["default", "acceptEdits", "plan", "dontAsk"] } },
-  });
-  let seq = 0;
-  const event = (part: unknown) => act(async () => emit({ type: "event", sessionId: ID, seq: ++seq, part }));
-  try {
-    // Opened once: the picker's items are registered (development-docs/GH-37 proposals: the tester picked Don't ask first).
-    await pickOption('[data-testid="mode-select"]', "Don't ask (deny unapproved)");
-    for (const mode of ["default", "acceptEdits", "plan", "auto"]) {
-      await press({ key: "Tab", shiftKey: true }, el.querySelector("textarea")!);
-      await event({ type: "session_permission_mode", id: "session_permission_mode", mode });
-    }
-    sent.length = 0;
-    await pickOption('[data-testid="session-model"]', "Haiku 4.5");
-    await event({ type: "session_model", id: "session_model", model: "haiku" });
-    await event({ type: "session_permission_mode", id: "session_permission_mode", mode: "default" });
-    expect(sent.filter((m) => m.type.startsWith("session.set"))).toEqual([{ type: "session.setModel", sessionId: ID, model: "haiku" }]);
-    expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Ask");
-  } finally {
-    restore();
-  }
-});
-
 it("a pending permission request keeps the Permission mode picker; changing the mode sends setPermissionMode and leaves the request pending (GH-145)", async () => {
   const s = { ...session, model: "sonnet", permissionMode: "default", permissionModes: [...MODES] };
   const restore = await remount({
     "session.list": { sessions: [s], projects: ["/p/demo"] },
     "session.subscribe": { logEpoch: "e1", session: s },
     "models.list": { models: AUTO_MODELS },
-    "session.setPermissionMode": { session: { ...s, permissionMode: "auto" } },
+    "session.setPermissionMode": { session: { ...s, permissionMode: "plan" } },
   });
   try {
     await act(async () =>
@@ -1752,8 +1663,8 @@ it("a pending permission request keeps the Permission mode picker; changing the 
     );
     expect(el.querySelector('[data-testid="permission-panel"] [data-testid="mode-select"]')).not.toBeNull();
     sent.length = 0;
-    await pickOption('[data-testid="permission-panel"] [data-testid="mode-select"]', "Auto mode");
-    expect(sent.filter((m) => m.type.startsWith("session.set"))).toEqual([{ type: "session.setPermissionMode", sessionId: ID, mode: "auto" }]);
+    await pickOption('[data-testid="permission-panel"] [data-testid="mode-select"]', "Plan");
+    expect(sent.filter((m) => m.type.startsWith("session.set"))).toEqual([{ type: "session.setPermissionMode", sessionId: ID, mode: "plan" }]);
     expect(sent.some((m) => m.type === "permission.respond")).toBe(false);
     expect(el.querySelector('[data-testid="permission-panel"]')).not.toBeNull();
   } finally {

@@ -136,15 +136,15 @@ it("model, effort and mode pages mark the current value and set the chosen one",
   expect(c.setMode).toHaveBeenCalledWith("plan");
 });
 
-it("the mode page lists Build, Plan and Auto when the session offers them", () => {
+it("the mode page lists Build and Plan when the session offers them", () => {
   const c = ctx();
   c.session!.modes = ["default", "acceptEdits", "plan", "auto", "dontAsk"];
   const mode = appCommands(c).find((x) => x.id === "mode.choose")!;
   const titles = "page" in mode ? mode.page.items.map((i) => i.title) : [];
-  expect(titles).toEqual(["Build", "Plan", "Auto"]);
-  const auto = "page" in mode && mode.page.items.find((i) => i.title === "Auto")!;
-  auto && "run" in auto && auto.run();
-  expect(c.setMode).toHaveBeenCalledWith("auto");
+  expect(titles).toEqual(["Build", "Plan"]);
+  const plan = "page" in mode && mode.page.items.find((i) => i.title === "Plan")!;
+  plan && "run" in plan && plan.run();
+  expect(c.setMode).toHaveBeenCalledWith("plan");
 });
 
 it("rewind lists prompts newest first; hidden while a turn runs, when Stop shows instead", () => {

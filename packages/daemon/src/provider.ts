@@ -147,3 +147,45 @@ export async function providerHealth(provider: ProviderSettings, token?: string)
   if (!response.ok) throw new Error(`provider_failed: HTTP ${response.status}`);
   return { model: p.model, latencyMs: Date.now() - started };
 }
+
+/** Every configured model id, default first, without repeats. */
+export function providerModelIds(provider: ProviderSettings): string[] {
+  const p = resolvedProvider(provider);
+  const listed = provider.models.split(",").map((m) => m.trim()).filter(Boolean);
+  return [...new Set([p.model, ...listed].filter(Boolean))];
+}
+
+export type ProviderModelHealth = { model: string; ok: boolean; latencyMs?: number; error?: string };
+
+/** count_tokens for the default model and every configured model: one bad id must not hide the others. */
+export async function providerHealthAll(provider: ProviderSettings, token?: string): Promise<{ model: string; latencyMs: number; models: ProviderModelHealth[] }> {
+  const p = resolvedProvider(provider, token);
+  if (p.mode !== "api") throw new Error("provider_not_configured: switch Provider mode to API and save the endpoint");
+  if (!p.baseUrl) throw new Error("provider_not_configured: base URL is required");
+  if (!p.key) throw new Error("provider_not_configured: an API key is required");
+  const ids = providerModelIds(provider);
+  if (!ids.length) throw new Error("provider_not_configured: a model is required");
+  const models: ProviderModelHealth[] = [];
+  let firstError: Error | undefined;
+  for (const model of ids) {
+    const started = Date.now();
+    try {
+      const response = await fetch(`${p.baseUrl.replace(/\/+$/, "")}/v1/messages/count_tokens`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "anthropic-version": "2023-06-01", authorization: `Bearer ${p.key}`, "x-api-key": p.key },
+        body: JSON.stringify({ model, messages: [{ role: "user", content: "hi" }] }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (response.status === 401 || response.status === 403) throw new Error("provider_auth: the gateway rejected the key");
+      if (!response.ok) throw new Error(`provider_failed: HTTP ${response.status}`);
+      models.push({ model, ok: true, latencyMs: Date.now() - started });
+    } catch (e) {
+      const error = e as Error;
+      models.push({ model, ok: false, error: error.message });
+      firstError ??= error;
+    }
+  }
+  const ok = models.find((m) => m.ok);
+  if (!ok) throw firstError ?? new Error("provider_failed: no model answered");
+  return { model: ok.model, latencyMs: ok.latencyMs ?? 0, models };
+}

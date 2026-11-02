@@ -460,7 +460,8 @@ export type WorktreeBranchesResult = { branches: BranchRow[]; defaultBase: strin
 export type JiraTicket = { key: string; type: string; summary: string; status: string };
 export type JiraSearchResult = { tickets: JiraTicket[] };
 /** A successful provider.test: the gateway's count_tokens reply, no generation and no key. */
-export type ProviderTestResult = { model: string; latencyMs: number };
+export type ProviderModelTest = { model: string; ok: boolean; latencyMs?: number; error?: string };
+export type ProviderTestResult = { model: string; latencyMs: number; models?: ProviderModelTest[] };
 /** A successful provider.models: model ids the gateway reports. */
 export type ProviderModelsResult = { models: string[] };
 /** Why a worktree cannot be removed now. */

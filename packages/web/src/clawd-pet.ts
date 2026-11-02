@@ -141,8 +141,8 @@ export function mountClawd(host: HTMLElement) {
       fala(LINES_HELD[Math.floor(Math.random() * LINES_HELD.length)]!, 1600);
     }
     if (modo !== "arrastado") return;
-    x = e.clientX - hostR.left - segura.dx;
-    y = e.clientY - hostR.top - segura.dy;
+    x = Math.max(0, Math.min(hostR.width - CW, e.clientX - hostR.left - segura.dx));
+    y = Math.max(0, e.clientY - hostR.top - segura.dy);
     const am = segura.am;
     am.push([e.clientX, e.clientY, performance.now()]);
     if (am.length > 5) am.shift();
@@ -203,6 +203,11 @@ export function mountClawd(host: HTMLElement) {
       if (x < -MARGEM || x > max) {
         x = Math.max(-MARGEM, Math.min(max, x));
         vx = -vx * 0.5;
+      }
+      if (y <= 0) {
+        // Thrown at the top of the chat: bounce inside the frame, never out.
+        y = 0;
+        if (vy < 0) vy = -vy * 0.35;
       }
       if (y >= casa.y) {
         y = casa.y;

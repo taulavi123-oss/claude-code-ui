@@ -6,9 +6,27 @@ All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Version
 
 - Build mode no longer keeps asking for Bash in a session that was restored
   from a legacy Ask / Edit automatically pick. The mode chip reads Build for
-  every non-plan, non-auto mode, and picking Build when it already said Build
-  sent no change; it now applies bypassPermissions, and such sessions restore
-  to bypass when Build means bypass on this daemon.
+  every non-plan mode, picking Build when it already said Build applies
+  bypassPermissions, and such sessions restore to bypass when Build means
+  bypass on this daemon.
+- Two modes: Auto is gone from the composer, the palette, Shift+Tab and
+  Settings > Permissions. Legacy sessions in auto keep working; the chip reads
+  Build.
+- Skills is a manager: every skill of the project with an on/off switch, no
+  slash commands. Off hides the skill from Claude and from the command list.
+- MCP moved into Settings: a manager that enables or disables each server.
+- The provider model picker refreshes after a provider change; Test connection
+  checks the default model and every configured model, one result each. A
+  focused provider field is saved when the dialog closes.
+- Sidebar: Pinned, Studio and Sketches are gone; the footer no longer says
+  "Studio · Max".
+- Scrollbars are 6px and fade out until the pointer is over the scroller.
+- Dark is the default theme; the system option also resolves to dark.
+- New app icon: orange Clawd on a dark rounded square.
+- The pet bounces off the top of the chat frame instead of flying out.
+- The composer and the transcript share the same content edges.
+- Launcher: TinyFish replaces Tavily for the MCP web search, with key rotation
+  when one key runs out of quota.
 
 ## 0.22.6 - 2026-11-01
 

@@ -63,7 +63,7 @@ import { ImageStrip, readDataUrl, readImages } from "./images.tsx";
 import { ArtifactConnectedContext, ArtifactPreviewContext, type ArtifactPreviewLoader } from "./artifact-preview.tsx";
 import { MediaContext, restoreImages, type MediaLoader } from "./media.ts";
 import { Toast, ToastRegion } from "./toast.tsx";
-import { GHOST, ModePicker, nextMode, PromptToolbar, ROW, SendButton, type SendState } from "./toolbar.tsx";
+import { GHOST, ModePicker, nextMode, PromptToolbar, ROW, SendButton, simpleTarget, type SendState } from "./toolbar.tsx";
 import { activeCommand, choose, dialogArg, dialogOf, insertSlash, matchCommands, withDialogCommands, withLocalCommands, type DialogName } from "./commands.ts";
 import { nextUpdate, UpdateToast, type UpdateInfo } from "./update.tsx";
 import { StaleToast } from "./stale-toast.tsx";
@@ -1175,7 +1175,17 @@ export function App() {
         void refreshList();
       },
       onPlanUsage: setPlan,
-      onSettingsChanged: (m) => (setSettingsChanged((n) => n + 1), setReposSeq((n) => n + 1), setWorkerNotices(m.settings.orchestration.workerNotifications !== false), setIgnoreSubmodules(m.settings.git?.ignoreSubmodules === true)),
+      onSettingsChanged: (m) => {
+        setSettingsChanged((n) => n + 1);
+        setReposSeq((n) => n + 1);
+        setWorkerNotices(m.settings.orchestration.workerNotifications !== false);
+        setIgnoreSubmodules(m.settings.git?.ignoreSubmodules === true);
+        // A provider change swaps the daemon's model list: pick it up without a reconnect.
+        c.request<ModelsResult>({ type: "models.list" }).then(
+          (r) => setModels(r.models),
+          () => {},
+        );
+      },
       onUpdate: (m) => setUpdate((u) => nextUpdate(u, m)),
       onStale: (note) => staleDismissed.current !== note && setStale(note),
       onConfigChanged: (m) => {
@@ -2043,8 +2053,8 @@ export function App() {
     reveal("files");
   };
   const draftModes = permissionModesFor({ allowBypass: newModes.includes("bypassPermissions"), supportsAuto: models.some((m) => m.value === pick.model && m.supportsAutoMode) });
-  // The settings default applies only where the draft's model offers it (auto needs support); else Ask.
-  const draft: StartOptions = { ...pick, mode: pick.mode ?? (draftModes.includes(defaultMode) ? defaultMode : "default") };
+  // The settings default applies only where the draft's model offers it; Auto is gone, so anything else is Build.
+  const draft: StartOptions = { ...pick, mode: pick.mode ?? simpleTarget(defaultMode === "plan" && draftModes.includes("plan") ? "plan" : "build", draftModes) };
   // A model without auto support takes the draft out of auto mode, like the daemon does for a session.
   const changeDraft = (d: StartOptions) => {
     const lost = d.mode === "auto" && !models.some((m) => m.value === d.model && m.supportsAutoMode);
@@ -2075,17 +2085,6 @@ export function App() {
     setResumeSearch((s) => ({ text: resumeSearchText(name, arg), seq: (s?.seq ?? 0) + 1 }));
   };
   const openDialog = (d: DialogName, arg?: string) => (d === "mcp" ? openMcp() : d === "plugins" ? openPlugins() : d === "resume" ? openResume(arg) : openSkills());
-  // The dialog lists the commands of its session (none on the new-session tab), plus the ones the web app handles itself.
-  const dialogSession = skillsDialog?.sessionId ? views[skillsDialog.sessionId] : undefined;
-  const skillsCommands = dialogSession?.commands.length ? withDialogCommands(dialogSession.commands) : [];
-  /** A command row was clicked: `/name ` goes into the prompt box, a command without arguments is sent (a dialog command opens its dialog). */
-  const runCommand = (r: ReturnType<typeof choose>) => {
-    if ("text" in r) return setInsert(r.text.trimEnd());
-    const dialog = dialogOf(r.send, dialogSession?.commands);
-    if (dialog) return openDialog(dialog, dialogArg(r.send));
-    if (!skillsDialog?.sessionId) return;
-    client.current!.request({ type: "session.prompt", sessionId: skillsDialog.sessionId, text: r.send, images: [] }).catch((e) => setError((e as Error).message));
-  };
   const mcpRows = async () =>
     project
       ? paletteOrder((await client.current!.request<McpListResult>({ type: "mcp.list", cwd: project, ...(projectSession && { sessionId: projectSession }) })).servers).map((x) => ({
@@ -2703,10 +2702,7 @@ export function App() {
             <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#7fb4ff] to-[#3f6fd8] text-[11px] font-semibold text-white">
               {hostLabel.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/80" title={hostLabel}>
-              Studio <span className="text-muted-foreground">· Max</span>
-            </span>
-            <ChevronDownIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 flex-1" title={hostLabel} aria-hidden />
             <button
               type="button"
               onClick={() => (setDrawer(false), setSettingsOpen(true))}
@@ -3169,10 +3165,8 @@ export function App() {
           open={skillsDialog.open}
           cwd={skillsDialog.cwd}
           sessionId={skillsDialog.sessionId}
-          commands={skillsCommands}
           changed={configChanged[skillsDialog.cwd]}
           request={(m) => client.current!.request(m)}
-          onRun={runCommand}
           onClose={() => setSkillsDialog({ ...skillsDialog, open: false })}
         />
       )}
@@ -3188,7 +3182,7 @@ export function App() {
           onClose={() => setPlugins({ ...plugins, open: false })}
         />
       )}
-      <SettingsDialog push={{ on: pushOn, supported: pushSupported(), busy: pushBusy, error: pushError, toggle: () => void togglePush() }} open={settingsOpen} changed={settingsChanged} request={(m) => client.current!.request(m)} onClose={() => setSettingsOpen(false)} tabGrouping={grouping} onTabGrouping={changeGrouping} onRestartGuide={() => startGuide("settings")} tabCompact={compact} onTabCompact={changeCompact} tabAutoClose={autoClose} onTabAutoClose={changeAutoClose} onShortcuts={() => (setSettingsOpen(false), setShortcutsOpen(true))} onSkills={project ? () => (setSettingsOpen(false), openSkills()) : undefined} />
+      <SettingsDialog push={{ on: pushOn, supported: pushSupported(), busy: pushBusy, error: pushError, toggle: () => void togglePush() }} open={settingsOpen} changed={settingsChanged} request={(m) => client.current!.request(m)} onClose={() => setSettingsOpen(false)} tabGrouping={grouping} onTabGrouping={changeGrouping} onRestartGuide={() => startGuide("settings")} tabCompact={compact} onTabCompact={changeCompact} tabAutoClose={autoClose} onTabAutoClose={changeAutoClose} onShortcuts={() => (setSettingsOpen(false), setShortcutsOpen(true))} onSkills={project ? () => (setSettingsOpen(false), openSkills()) : undefined} onMcp={project ? () => (setSettingsOpen(false), openMcp()) : undefined} />
       {shown && client.current && (
         <ViewerDialog
           target={viewer && !isFileTarget(viewer.target) ? viewer.target : undefined}
@@ -4073,7 +4067,7 @@ export function SessionPane({
       )}
       <div
         ref={dock}
-        className={`relative mx-auto flex w-full max-w-[680px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 ${dockHidden ? "hidden" : ""}`}
+        className={`relative mx-auto flex w-full max-w-[680px] flex-col gap-2 p-4 max-sm:px-2 max-sm:py-2 md:pr-[22px] ${dockHidden ? "hidden" : ""}`}
         data-hidden={dockHidden || undefined}
         onFocus={() => setDockFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setDockFocused(false)}
