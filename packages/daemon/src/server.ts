@@ -1050,7 +1050,13 @@ export function createDaemon(opts: {
         const model = isModel(saved?.model) ? saved.model : used && ((await modelList().catch(() => [])).find((m) => m.resolvedModel === used)?.value ?? used);
         // A mode the daemon does not enable now (bypass without CLAUDE_UI_ALLOW_BYPASS) falls back to the default.
         const modes = permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto(model ?? "default") });
-        const permissionMode = modes.includes(saved.permissionMode as never) ? (saved.permissionMode as SessionSettings["permissionMode"]) : undefined;
+        const savedMode = modes.includes(saved.permissionMode as never) ? (saved.permissionMode as SessionSettings["permissionMode"]) : undefined;
+        // The three-mode composer shows Ask/Accept edits as Build, and picking Build again
+        // used to send no change: such a restored session kept asking for every command.
+        // Where Build means bypass, those legacy picks restore to it.
+        const policyMode = modeForPolicy(appSettings.get().permissions?.policy, modes);
+        const permissionMode =
+          (savedMode === "default" || savedMode === "acceptEdits") && policyMode === "bypassPermissions" ? "bypassPermissions" : savedMode;
         const effort = EFFORTS.includes(saved.effort as never) ? (saved.effort as SessionSettings["effort"]) : undefined;
         // Each run's messages name the Agent call that started it (parent_tool_use_id): they go right after that call's result, inside its turn.
         // A run whose call was compacted away renders nowhere: only its edits are kept (for the changes tab). Every message read stays known,

@@ -131,7 +131,7 @@ it("model, effort and mode pages mark the current value and set the chosen one",
   };
   expect(page("model.choose").map((i) => [i.title, !!i.checked])).toEqual([["Opus", true], ["Sonnet", false]]);
   expect(page("effort.choose").map((i) => i.title)).toEqual(["Default", "Low", "High"]);
-  const plan = page("mode.choose").find((i) => i.title === "Plan mode")!;
+  const plan = page("mode.choose").find((i) => i.title === "Plan")!;
   "run" in plan && plan.run();
   expect(c.setMode).toHaveBeenCalledWith("plan");
 });

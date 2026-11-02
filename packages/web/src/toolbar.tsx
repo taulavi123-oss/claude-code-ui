@@ -25,7 +25,9 @@ export const EFFORT_LABEL: Record<Effort, string> = { default: "Default", low: "
 
 /** Shift+Tab: the next mode in Claude Code's order, wrapping around. Don't ask is only chosen from the picker: a silently denying mode must not be entered by accident. */
 export const nextMode = (modes: PermissionMode[], mode: PermissionMode) => {
-  const order: SimpleMode[] = ["build", "plan", "auto"].filter((m): m is SimpleMode => m !== "auto" || modes.includes("auto"));
+  const order: SimpleMode[] = (["build", "plan", "auto"] as SimpleMode[]).filter(
+    (m) => m === "build" || modes.includes(m === "plan" ? "plan" : "auto"),
+  );
   const at = order.indexOf(simpleOf(mode));
   return simpleTarget(order[(at + 1) % order.length]!, modes);
 };
@@ -58,6 +60,7 @@ export function Chooser<T extends string>({
   icon,
   testId,
   className = "",
+  reapply = false,
 }: {
   label: string;
   value: T;
@@ -66,6 +69,8 @@ export function Chooser<T extends string>({
   icon?: ReactNode;
   testId: string;
   className?: string;
+  /** Fire onChange for the item already shown: one label can stand for more than one wire value. */
+  reapply?: boolean;
 }) {
   const current = items.find((i) => i.value === value);
   // The name starts with the visible text (WCAG 2.5.3 Label in Name), then says what the control sets.
@@ -79,7 +84,7 @@ export function Chooser<T extends string>({
     <Select
       items={items}
       value={value}
-      onValueChange={(v, { reason }) => (reason === "item-press" || (reason === "none" && typed.current)) && v !== null && v !== value && onChange(v as T)}
+      onValueChange={(v, { reason }) => (reason === "item-press" || (reason === "none" && typed.current)) && v !== null && (reapply || v !== value) && onChange(v as T)}
     >
       <SelectTrigger
         onKeyDownCapture={(e) => {
@@ -139,7 +144,9 @@ export const simpleTarget = (value: SimpleMode, modes: PermissionMode[]): Permis
 
 export function SimpleModePicker({ mode, modes, onMode, className = "shrink-0" }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string }) {
   const items = SIMPLE_MODES.filter((m) => m.value !== "auto" || modes.includes("auto")).map((m) => ({ value: m.value, label: m.label }));
-  return <Chooser label="Mode" testId="mode-select" value={simpleOf(mode)} onChange={(v) => onMode(simpleTarget(v, modes))} items={items} className={className} />;
+  // `reapply`: the chip reads Build for acceptEdits/default too, so picking Build again
+  // must still send bypassPermissions; the plain value comparison would drop it.
+  return <Chooser label="Mode" testId="mode-select" value={simpleOf(mode)} onChange={(v) => onMode(simpleTarget(v, modes))} items={items} className={className} reapply />;
 }
 
 export function ModePicker({ mode, modes, onMode, className = "shrink-0" }: { mode: PermissionMode; modes: PermissionMode[]; onMode: (mode: PermissionMode) => void; className?: string; shortcut?: boolean; short?: boolean }) {

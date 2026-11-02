@@ -2,6 +2,14 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.7 - 2026-11-02
+
+- Build mode no longer keeps asking for Bash in a session that was restored
+  from a legacy Ask / Edit automatically pick. The mode chip reads Build for
+  every non-plan, non-auto mode, and picking Build when it already said Build
+  sent no change; it now applies bypassPermissions, and such sessions restore
+  to bypass when Build means bypass on this daemon.
+
 ## 0.22.6 - 2026-11-01
 
 - Exactly three modes, everywhere: Build, Plan, Auto. Build is full access

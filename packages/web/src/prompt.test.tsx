@@ -119,8 +119,8 @@ it("the header holds no model chooser; the prompt toolbar shows model, effort an
   const { el, $ } = await render({}, view);
   expect(el.querySelector("header [data-testid=session-model]")).toBeNull();
   expect($("prompt-toolbar")!.contains($("session-model"))).toBe(true);
-  expect($("session-model")!.textContent).toContain("Default (recommended)");
-  expect($("mode-select")!.textContent).toContain("Plan mode");
+  expect($("session-model")!.textContent).toContain("Default model");
+  expect($("mode-select")!.textContent).toContain("Plan");
   expect($("effort-select")!.textContent).toContain("High");
 });
 
@@ -143,7 +143,7 @@ it("the model picker drops the parenthesised note where short, and the ring sits
   const view = applyEvent(emptySession(), { type: "event", sessionId: "s1", seq: 1, part: { type: "context_usage", id: "context_usage", usage: { totalTokens: 100, maxTokens: 1000, percentage: 10, categories: [] } } });
   const { $ } = await render({}, view);
   // jsdom shows both labels (CSS picks one by the toolbar width); the full name stays the accessible name.
-  expect($("session-model")!.textContent).toContain("Default modelDefault (recommended)");
+  expect($("session-model")!.textContent).toContain("Default model");
   expect($("session-model")!.getAttribute("aria-label")).toBe("Default (recommended), Model");
   expect($("context-meter")).not.toBeNull();
 });
@@ -158,12 +158,15 @@ it("Shift+Tab cycles the permission mode like Claude Code, also while the picker
   const onMode = vi.fn();
   const { box, rerender } = await render({ onMode });
   await key(box, { key: "Tab", shiftKey: true });
-  expect(onMode).toHaveBeenLastCalledWith("acceptEdits");
-  await rerender({ view: { ...emptySession(), permissionMode: "plan", commands: [{ name: "review", description: "", argumentHint: "" }] } });
+  expect(onMode).toHaveBeenLastCalledWith("plan");
+  await rerender({
+    view: { ...emptySession(), model: "sonnet", permissionMode: "plan", commands: [{ name: "review", description: "", argumentHint: "" }] },
+    session: { id: "s1", cwd: "/tmp", state: "idle", model: "sonnet", permissionMode: "plan", effort: "default", permissionModes: ["default", "acceptEdits", "plan", "auto"] },
+  });
   await type(box, "/");
   expect(box.getAttribute("aria-expanded")).toBe("true");
   await key(box, { key: "Tab", shiftKey: true });
-  expect(onMode).toHaveBeenLastCalledWith("default");
+  expect(onMode).toHaveBeenLastCalledWith("auto");
 });
 
 it("Shift+Tab sends nothing when no other mode is known", async () => {
@@ -350,6 +353,17 @@ const openModes = async ($: (id: string) => HTMLElement | null) => {
 it("the permission mode picker lists exactly Build, Plan and Auto", async () => {
   const { $ } = await render({ session: { id: "s1", cwd: "/tmp", state: "idle", model: "sonnet", permissionMode: "default", effort: "default", permissionModes: [...ALL_MODES] } });
   expect(await openModes($)).toEqual(["Build", "Plan", "Auto"]);
+});
+
+it("picking Build again upgrades a legacy acceptEdits session to bypass", async () => {
+  const onMode = vi.fn();
+  const session = { id: "s1", cwd: "/tmp", state: "idle" as const, model: "sonnet", permissionMode: "acceptEdits" as const, effort: "default" as const, permissionModes: [...ALL_MODES] };
+  const { $ } = await render({ onMode, session });
+  expect($("mode-select")!.textContent).toContain("Build");
+  await act(async () => $("mode-select")!.click());
+  const build = [...document.querySelectorAll<HTMLElement>("[role=option]")].find((o) => o.textContent === "Build")!;
+  await act(async () => build.click());
+  expect(onMode).toHaveBeenLastCalledWith("bypassPermissions");
 });
 
 it("the picker has no Auto mode when the model does not offer it", async () => {
@@ -748,7 +762,7 @@ it("GH-166: phone: mode, model and effort sit behind one settings chip; the tool
     expect(chip.textContent).toContain("Default model");
     const name = chip.getAttribute("aria-label")!;
     expect(name.startsWith(chip.textContent!)).toBe(true);
-    expect(name).toContain("Plan mode");
+    expect(name).toContain("Plan");
     expect(name).toContain("Default (recommended)");
     expect(name).toContain("High");
     expect($("prompt-toolbar")!.className).not.toContain("flex-wrap");

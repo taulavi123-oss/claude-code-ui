@@ -35,7 +35,7 @@ export function PermissionsSection({ permissions, saving, save, bypassAvailable 
     <section className="flex flex-col gap-3" data-testid="settings-permissions">
       <div role="radiogroup" aria-label="Permission mode" className="flex flex-col gap-2" data-testid="settings-permissions-policy">
         {options.map((option) => {
-          const active = permissions.policy === option.value;
+          const active = (permissions.policy === "ask" ? "build" : permissions.policy) === option.value;
           return (
             <button
               key={option.value}

@@ -6,8 +6,9 @@ const withBypass = permissionModesFor({ allowBypass: true, supportsAuto: true })
 const withoutBypass = permissionModesFor({ allowBypass: false, supportsAuto: false });
 
 describe("permission policy", () => {
-  it("ask leaves the choice to the Claude settings files", () => {
-    expect(modeForPolicy("ask", withBypass)).toBeUndefined();
+  it("the legacy ask policy is treated as Build", () => {
+    expect(modeForPolicy("ask", withBypass)).toBe("bypassPermissions");
+    expect(modeForPolicy("ask", withoutBypass)).toBe("acceptEdits");
   });
 
   it("build uses bypassPermissions when the daemon allows it", () => {

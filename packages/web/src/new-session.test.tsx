@@ -58,10 +58,10 @@ it("the new-session tab has the session prompt toolbar; the first prompt starts 
   const { el, box } = await render({ onStart });
   for (const id of ["prompt-toolbar", "attach", "mode-select", "session-model", "effort-select"]) expect(el.querySelector(`[data-testid="${id}"]`), id).not.toBeNull();
   await key(box, { key: "Tab", shiftKey: true });
-  expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Edit automatically");
+  expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Plan");
   await type(box, "hello");
   await key(box, { key: "Enter" });
-  expect(onStart).toHaveBeenCalledWith("/p/a", { model: "default", mode: "acceptEdits", effort: "default" }, { text: "hello", images: [] });
+  expect(onStart).toHaveBeenCalledWith("/p/a", { model: "default", mode: "plan", effort: "default" }, { text: "hello", images: [] });
 });
 
 it("a failed start keeps the draft; the error goes away when the project changes", async () => {
@@ -133,7 +133,7 @@ it('"!" in the first prompt box is bash mode: Enter starts the session with the 
   expect(el.querySelector('[data-testid="bash-mode"]')).not.toBeNull();
   await type(box, "  ls -la ");
   await key(box, { key: "Enter" });
-  expect(onStart).toHaveBeenCalledWith("/p/a", { model: "default", mode: "acceptEdits", effort: "default" }, { command: "ls -la" });
+  expect(onStart).toHaveBeenCalledWith("/p/a", { model: "default", mode: "plan", effort: "default" }, { command: "ls -la" });
   expect(el.querySelector('[data-testid="bash-mode"]')).toBeNull();
   await rerender({ cwd: undefined });
   await key(box, { key: "!" });
@@ -192,7 +192,7 @@ it("switching to another tab and back keeps the new-session draft and the chosen
   await show(false);
   await show(true);
   expect(el.querySelector("textarea")!.value).toBe("draft text");
-  expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Edit automatically");
+  expect(el.querySelector('[data-testid="mode-select"]')?.textContent).toContain("Build");
 });
 
 it("the @-mention picker of the first prompt searches again once the daemon reconnects", async () => {
@@ -319,7 +319,7 @@ it("Run session in lists the chosen project's worktrees inside the roots; a pick
   await rerender({ cwd: "/p/a-wt" });
   expect(chip().textContent).toContain("feature-x");
   expect(el.querySelector('[data-testid="new-project"]')?.textContent).toBe("a");
-  expect(box.placeholder).toBe("Ask Claude in a · feature-x…");
+  expect(box.placeholder).toBe("Type / for commands");
   await act(async () => el.querySelector<HTMLElement>('[data-testid="project-chip"]')!.click());
   // The worktree popup may still be unmounting: the project popup's items are what counts.
   const texts = options().map((o) => o.textContent);
