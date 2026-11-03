@@ -2,6 +2,21 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.9 - 2026-11-03
+
+- Skills/plugin and MCP changes restart the CLI of sessions in that project,
+  so the next turn sees the new skill or server without a new session.
+- WebSocket heartbeat: a half-open connection behind a proxy/NAT is detected
+  and reconnected instead of sitting on "disconnected".
+- DeepSeek/auto-mode classifier billing notice is hidden; it does not apply
+  to Build/Plan.
+- Wallpaper motion setting: Auto / Always / Off. Always ignores the OS
+  reduced-motion flag; a roundRect polyfill keeps old browsers animating
+  instead of freezing.
+- Auxiliary model (session titles, summaries) and subagent model are no longer
+  forced to the main model: `CLAUDE_UI_AUX_MODEL` and
+  `CLAUDE_UI_SUBAGENT_MODEL` override them.
+
 ## 0.22.8 - 2026-11-03
 
 - Changing the provider (Custom API base, model or key) now restarts the CLI

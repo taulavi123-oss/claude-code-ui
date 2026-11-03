@@ -35,6 +35,7 @@ import { JiraSection } from "./jira-settings.tsx";
 import { CHAT_THEMES, saveChatTheme, useChatTheme } from "./chat-theme.ts";
 import { ThemePreview } from "./theme-preview.tsx";
 import { savePetEnabled, usePetEnabled } from "./pet-setting.ts";
+import { saveWallpaperMotion, useWallpaperMotion } from "./wallpaper-motion.ts";
 import { PermissionsSection } from "./permissions-settings.tsx";
 import { ProviderSection } from "./provider-settings.tsx";
 
@@ -217,8 +218,30 @@ function ScreenSection() {
 function ChatThemeRows() {
   const theme = useChatTheme();
   const pet = usePetEnabled();
+  const motion = useWallpaperMotion();
   return (
     <>
+      <div className="flex items-center gap-3 border-t py-2 max-md:min-h-11">
+        <div className="min-w-0 flex-1">
+          <span id="settings-wallpaper-motion-label" className="block text-sm">Wallpaper motion</span>
+          <span id="settings-wallpaper-motion-hint" className="block text-muted-foreground text-xs">
+            Auto follows the system's reduced-motion setting, Always animates anyway (for a PC where it is off), Off paints
+            one still frame. Kept in this browser.
+          </span>
+        </div>
+        <div className="w-32 shrink-0">
+          <Select value={motion} onValueChange={(v) => v && saveWallpaperMotion(v as "auto" | "always" | "off")}>
+            <SelectTrigger aria-label="Wallpaper motion" aria-describedby="settings-wallpaper-motion-hint" data-testid="settings-wallpaper-motion">
+              <SelectValue>{(v: string) => (v === "always" ? "Always" : v === "off" ? "Off" : "Auto")}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto</SelectItem>
+              <SelectItem value="always">Always</SelectItem>
+              <SelectItem value="off">Off</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <div className="flex flex-col gap-2 border-t py-2">
         <div className="min-w-0">
           <span className="block text-sm">Chat theme</span>

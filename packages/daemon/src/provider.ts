@@ -50,10 +50,19 @@ export function providerEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.Proces
   const model = out.ANTHROPIC_MODEL;
 
   if (model) {
-    for (const key of ["ANTHROPIC_DEFAULT_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL", "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "CLAUDE_CODE_SUBAGENT_MODEL"]) {
+    for (const key of ["ANTHROPIC_DEFAULT_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL", "ANTHROPIC_DEFAULT_SONNET_MODEL"]) {
       out[key] ??= model;
     }
   }
+
+  // Aux tasks (session titles, summaries) and subagents may use a cheaper id.
+  // Forcing them to the main model billed every side task at its price.
+  const aux = (env.CLAUDE_UI_AUX_MODEL ?? "").trim();
+  const subagent = (env.CLAUDE_UI_SUBAGENT_MODEL ?? "").trim();
+
+  if (aux) out.ANTHROPIC_DEFAULT_HAIKU_MODEL = aux;
+
+  if (subagent) out.CLAUDE_CODE_SUBAGENT_MODEL = subagent;
 
   out.CLAUDE_CODE_MAX_CONTEXT_TOKENS ??= env.CLAUDE_UI_CONTEXT_WINDOW?.trim() || DEFAULT_CONTEXT_TOKENS;
   out.CLAUDE_CODE_MAX_OUTPUT_TOKENS ??= env.CLAUDE_UI_MAX_OUTPUT_TOKENS?.trim() || DEFAULT_MAX_OUTPUT_TOKENS;

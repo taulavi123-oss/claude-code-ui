@@ -422,7 +422,7 @@ export class Session {
    * Provider settings changed: end this CLI so the next turn starts against
    * the new gateway and key. The transcript is resumed, not lost.
    */
-  async restartForProvider() {
+  async restartCli() {
     if (!this.query) return;
     await this.close();
   }

@@ -8,6 +8,7 @@
 // prefers-reduced-motion.
 import { useEffect, useRef } from "react";
 import { type ChatThemeId } from "./chat-theme.ts";
+import { useWallpaperMotion } from "./wallpaper-motion.ts";
 import { Renderer, THEMES } from "./wallpapers/engine.ts";
 import { THEME_ID } from "./wallpapers/theme-map.ts";
 
@@ -15,6 +16,7 @@ const FRAME_MS = 1000 / 25;
 
 export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; className?: string }) {
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  const motion = useWallpaperMotion();
 
   useEffect(() => {
     const el = canvas.current;
@@ -22,7 +24,8 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
     const spec = THEMES.find((t: { id: string }) => t.id === THEME_ID[theme]);
     if (!spec) return;
 
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const reduced =
+      motion === "off" || (motion === "auto" && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false));
     const renderer = Renderer(el, { cw: 16, ch: 22, ss: 2 });
     let raf = 0;
     let t = 0;
@@ -70,7 +73,7 @@ export function ChatWallpaper({ theme, className = "" }: { theme: ChatThemeId; c
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [theme]);
+  }, [theme, motion]);
 
   if (theme === "none") return null;
 

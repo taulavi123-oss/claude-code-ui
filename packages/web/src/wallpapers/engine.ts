@@ -10,6 +10,29 @@
 // springs that flee, approach or follow it, and clicks spawn theme effects.
 
 const TAU = Math.PI * 2;
+
+// Older Safari/Firefox and in-app WebViews lack roundRect; the engine calls it
+// every frame, and an exception there froze the wallpaper on those browsers.
+if (typeof CanvasRenderingContext2D !== "undefined" && typeof CanvasRenderingContext2D.prototype.roundRect !== "function") {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    const list = Array.isArray(r) ? r : [r ?? 0];
+    const [tl = 0, tr = tl, br = tl, bl = tl] = list;
+    const m = Math.min(Math.abs(w), Math.abs(h)) / 2;
+    const a = Math.max(0, Math.min(m, tl)), b = Math.max(0, Math.min(m, tr)), c = Math.max(0, Math.min(m, br)), d = Math.max(0, Math.min(m, bl));
+    this.beginPath();
+    this.moveTo(x + a, y);
+    this.lineTo(x + w - b, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + b);
+    this.lineTo(x + w, y + h - c);
+    this.quadraticCurveTo(x + w, y + h, x + w - c, y + h);
+    this.lineTo(x + d, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - d);
+    this.lineTo(x, y + a);
+    this.quadraticCurveTo(x, y, x + a, y);
+    this.closePath();
+    return this;
+  };
+}
 const hash = (a, b, c = 0) => { const h = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453; return h - Math.floor(h); };
 const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
 const hx = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];

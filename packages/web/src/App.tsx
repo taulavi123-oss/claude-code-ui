@@ -4919,6 +4919,9 @@ function PartView({ part, view }: { part: Part; view: SessionView }) {
         </div>
       );
     case "notice":
+      // The gateway warning about auto-mode classifier billing is noise when
+      // the session runs in Build/Plan (auto mode is gone from this UI).
+      if (/auto[- ]mode/i.test(part.text) && /classifier/i.test(part.text)) return null;
       // Claude Code's banner levels: notice in inactive gray, warning prominent. A run of blank lines shows as one.
       return (
         <div data-testid="notice" className={`flex items-start gap-1.5 text-xs ${part.level === "warning" ? "text-warning" : "text-muted-foreground"}`}>

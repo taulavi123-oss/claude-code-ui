@@ -63,6 +63,9 @@ export function connect(opts: {
   let probing = false;
   /** The current socket reported error or close; its readyState can lag behind (a browser fires error first). */
   let sockDown = false;
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
+  const waitingPongs = new Set<string>();
+  let hbSeq = 0;
   let failures = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let markOpen!: () => void;
@@ -105,10 +108,33 @@ export function connect(opts: {
       markOpen();
       opts.onStatus?.("connected");
       opts.onOpen?.();
+      // A proxy/NAT can leave a half-open socket that fires no close event:
+      // ping, and drop it when the reply does not arrive.
+      clearInterval(heartbeat);
+      waitingPongs.clear();
+      heartbeat = setInterval(() => {
+        if (!current() || sock.readyState !== WebSocket.OPEN) return;
+        const id = `hb-${++hbSeq}`;
+        waitingPongs.add(id);
+        try {
+          sock.send(JSON.stringify({ type: "ping", reqId: id }));
+        } catch {
+          return;
+        }
+        setTimeout(() => {
+          if (!waitingPongs.delete(id)) return;
+          try {
+            sock.close();
+          } catch {
+            // Already closed: the close handler reconnects.
+          }
+        }, 6000);
+      }, 20_000);
     });
     sock.addEventListener("message", (ev) => {
       if (!current()) return;
       const m: ServerMessage = JSON.parse(ev.data);
+      if ("reqId" in m && typeof m.reqId === "string" && waitingPongs.delete(m.reqId)) return;
       if (m.type === "event") return opts.onEvent(m);
       if (m.type === "fs.changed") return fsListeners.forEach((l) => l(m));
       if (m.type === "terminal.output" || m.type === "terminal.exit") return terminalListeners.forEach((l) => l(m));
@@ -131,6 +157,9 @@ export function connect(opts: {
       down = true;
       sockDown = true;
       const wasOpen = isOpen;
+      clearInterval(heartbeat);
+      heartbeat = undefined;
+      waitingPongs.clear();
       markDown();
       if (closed) return;
       if (!wasOpen && (await rejectsToken())) {
@@ -217,6 +246,8 @@ export function connect(opts: {
     close() {
       closed = true;
       clearTimeout(timer);
+      clearInterval(heartbeat);
+      waitingPongs.clear();
       stopWakeEvents();
       ws?.close();
     },

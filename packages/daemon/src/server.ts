@@ -465,11 +465,12 @@ export function createDaemon(opts: {
     });
   const supportsAuto = (model: string) => known.some((m) => m.value === model && m.supportsAutoMode);
   const roots = opts.roots.map(real).filter((r) => r !== undefined);
-  /** End every running CLI so the next turn reads the provider env just applied. */
-  const restartForProvider = async () => {
+  /** End running CLIs (all, or one project) so the next turn reads the new provider, skills or MCP config. */
+  const restartSessions = async (cwd?: string) => {
     for (const session of sessions.values()) {
+      if (cwd && session.cwd !== cwd) continue;
       try {
-        await session.restartForProvider();
+        await session.restartCli();
       } catch {
         // A session that already ended needs nothing.
       }
@@ -1881,7 +1882,7 @@ export function createDaemon(opts: {
             secrets.setAnthropicToken(msg.token === null ? null : msg.token.trim());
             applyStoredProvider(appSettings.get().provider, secrets.anthropicToken());
             resetModelList();
-            await restartForProvider();
+            await restartSessions();
           } catch (err) {
             return fail("bad_settings", (err as Error).message);
           }
@@ -1922,7 +1923,7 @@ export function createDaemon(opts: {
             perfMon.setEnabled(settings.performance.monitor);
             applyStoredProvider(settings.provider, secrets.anthropicToken());
             resetModelList();
-            if (msg.patch.provider) await restartForProvider();
+            if (msg.patch.provider) await restartSessions();
             if (msg.patch.permissions) {
               // The picker in an open session keeps its own mode; a policy change
               // is meant to apply now, not only to the next session.
@@ -2352,7 +2353,12 @@ export function createDaemon(opts: {
           if (!msg.type.startsWith("mcp.") && !msg.type.startsWith("skills."))
             try {
               const r = await plugins.handle(msg as PluginsRequest, cwd);
-              if (!msg.type.endsWith(".list")) commandCache.clear();
+              if (!msg.type.endsWith(".list")) {
+                commandCache.clear();
+                // Installing/removing a plugin changes the skills and MCP set:
+                // the next turn must start a CLI that sees them.
+                if (msg.type !== "plugins.reload" && msg.type !== "plugins.restart") void restartSessions(cwd);
+              }
               return reply(r);
             } catch (e) {
               return fail(e instanceof ConfigError ? e.code : "plugins_failed", (e as Error).message);
@@ -2363,6 +2369,7 @@ export function createDaemon(opts: {
             const live = s?.cwd === cwd ? s.liveQuery() : undefined;
             const r = msg.type.startsWith("skills.") ? await config.skills(msg as SkillsRequest, cwd, live) : await config.mcp(msg as McpRequest, cwd, live);
             if (msg.type === "skills.setState") commandCache.clear();
+            if (["mcp.add", "mcp.remove", "mcp.toggle", "mcp.clearAuth"].includes(msg.type)) void restartSessions(cwd);
             return reply(r);
           } catch (e) {
             return fail(e instanceof ConfigError ? e.code : msg.type.startsWith("skills.") ? "skills_failed" : "mcp_failed", (e as Error).message);
