@@ -418,6 +418,15 @@ export class Session {
     await Promise.race([this.driving, new Promise((r) => setTimeout(r, 5000).unref())]);
   }
 
+  /**
+   * Provider settings changed: end this CLI so the next turn starts against
+   * the new gateway and key. The transcript is resumed, not lost.
+   */
+  async restartForProvider() {
+    if (!this.query) return;
+    await this.close();
+  }
+
   /** The running query, for control requests of the config dialogs; none before the first prompt or after it ended. */
   liveQuery(): Query | undefined {
     return this.isLive() ? this.query : undefined;

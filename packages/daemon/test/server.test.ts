@@ -4109,7 +4109,11 @@ describe("default permission mode from Claude settings (permissions.defaultMode)
   async function setup(allowBypass = false) {
     const claudeDir = mkdtempSync(join(tmpdir(), "claude-user-"));
     const project = mkdtempSync(join(tmpdir(), "proj-"));
-    const d = createDaemon({ webRoot, token, roots: [project], query: fakeQuery as never, claudeDir, allowBypass, history: { listSessions: (async () => []) as never } as never });
+    // `ask` is the legacy policy that lets the Claude settings files decide;
+    // the daemon default is Build, which would hide that resolution.
+    const settingsFile = join(mkdtempSync(join(tmpdir(), "settings-")), "settings.json");
+    writeFileSync(settingsFile, JSON.stringify({ permissions: { policy: "ask" } }));
+    const d = createDaemon({ webRoot, token, roots: [project], query: fakeQuery as never, claudeDir, allowBypass, appSettings: createSettings({ file: settingsFile }), history: { listSessions: (async () => []) as never } as never });
     await new Promise<void>((r) => d.listen(0, "127.0.0.1", r));
     const c = await client((d.address() as AddressInfo).port);
     const mode = async (cwd = project) => ((await c.request({ type: "session.defaultMode", cwd })) as { result: { mode: string } }).result.mode;

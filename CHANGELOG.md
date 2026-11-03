@@ -2,6 +2,17 @@
 
 All notable changes to `claude-code-ui` (npm). Versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.22.8 - 2026-11-03
+
+- Changing the provider (Custom API base, model or key) now restarts the CLI
+  of every open session, so the next message uses the new endpoint instead of
+  the one the process started with. Test connection already used the saved
+  settings; chat now matches it.
+- The launcher's default Anthropic-compatible endpoint is
+  `https://vps31.4gauto.fun`.
+- A direct `CLAUDE_UI_PUBLIC_URL` stops the launcher from starting a quick
+  Cloudflare tunnel and overwriting the advertised hostname.
+
 ## 0.22.7 - 2026-11-02
 
 - Build mode no longer keeps asking for Bash in a session that was restored

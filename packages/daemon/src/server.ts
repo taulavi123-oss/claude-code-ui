@@ -465,6 +465,16 @@ export function createDaemon(opts: {
     });
   const supportsAuto = (model: string) => known.some((m) => m.value === model && m.supportsAutoMode);
   const roots = opts.roots.map(real).filter((r) => r !== undefined);
+  /** End every running CLI so the next turn reads the provider env just applied. */
+  const restartForProvider = async () => {
+    for (const session of sessions.values()) {
+      try {
+        await session.restartForProvider();
+      } catch {
+        // A session that already ended needs nothing.
+      }
+    }
+  };
   /** UNC roots (configured and canonical form): the only UNC paths that may reach the file system (GH-282: an SMB lookup sends the NTLM hash). */
   const uncRoots = [...opts.roots, ...roots].filter((r) => winPathKind(r) === "unc");
   const refused = (p: string) => refusedPath(p, uncRoots);
@@ -1050,13 +1060,7 @@ export function createDaemon(opts: {
         const model = isModel(saved?.model) ? saved.model : used && ((await modelList().catch(() => [])).find((m) => m.resolvedModel === used)?.value ?? used);
         // A mode the daemon does not enable now (bypass without CLAUDE_UI_ALLOW_BYPASS) falls back to the default.
         const modes = permissionModesFor({ allowBypass: opts.allowBypass, supportsAuto: supportsAuto(model ?? "default") });
-        const savedMode = modes.includes(saved.permissionMode as never) ? (saved.permissionMode as SessionSettings["permissionMode"]) : undefined;
-        // The three-mode composer shows Ask/Accept edits as Build, and picking Build again
-        // used to send no change: such a restored session kept asking for every command.
-        // Where Build means bypass, those legacy picks restore to it.
-        const policyMode = modeForPolicy(appSettings.get().permissions?.policy, modes);
-        const permissionMode =
-          (savedMode === "default" || savedMode === "acceptEdits") && policyMode === "bypassPermissions" ? "bypassPermissions" : savedMode;
+        const permissionMode = modes.includes(saved.permissionMode as never) ? (saved.permissionMode as SessionSettings["permissionMode"]) : undefined;
         const effort = EFFORTS.includes(saved.effort as never) ? (saved.effort as SessionSettings["effort"]) : undefined;
         // Each run's messages name the Agent call that started it (parent_tool_use_id): they go right after that call's result, inside its turn.
         // A run whose call was compacted away renders nowhere: only its edits are kept (for the changes tab). Every message read stays known,
@@ -1877,6 +1881,7 @@ export function createDaemon(opts: {
             secrets.setAnthropicToken(msg.token === null ? null : msg.token.trim());
             applyStoredProvider(appSettings.get().provider, secrets.anthropicToken());
             resetModelList();
+            await restartForProvider();
           } catch (err) {
             return fail("bad_settings", (err as Error).message);
           }
@@ -1917,6 +1922,7 @@ export function createDaemon(opts: {
             perfMon.setEnabled(settings.performance.monitor);
             applyStoredProvider(settings.provider, secrets.anthropicToken());
             resetModelList();
+            if (msg.patch.provider) await restartForProvider();
             if (msg.patch.permissions) {
               // The picker in an open session keeps its own mode; a policy change
               // is meant to apply now, not only to the next session.
